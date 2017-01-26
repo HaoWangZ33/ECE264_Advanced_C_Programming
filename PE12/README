@@ -1,0 +1,265 @@
+// ~ Overview ~ //
+
+This exercise will familiarize you with structures, dynamic memory allocation, 
+file operations, and bit-wise operations.
+
+// ~ Learning Goals ~ //
+
+(1) To learn to read and write a structure into a file
+(2) To learn to manipulate arrays 
+(3) To perform bit-wise operations
+
+// ~ Submitting Your Assignment ~ //
+
+You must submit two files:
+
+(1) pe12.c
+(2) bmp.c
+
+You create a zip file using the following command.
+ 
+> zip PE12.zip pe12.c bmp.c 
+
+// ~ Overview ~ //
+
+This is a continuation of PE11.  In that exercise, you have created
+functions to load in a BMP file into the structure BMP_Image.
+In this exercise, you will use a slightly different bmp.h file.  You will 
+re-use most of the bmp.c file you have developed in PE11, and also implement 
+two more functions:
+One function convert a 24-bit BMP file into a 16-bit BMP file, and the
+other converts a 16-bit BMP file into a 24-bit BMP file.
+
+For the 24-to-16-bit converion, you have to deal with bit-wise 
+operations.  Here are a few that could be useful: shift, bit-wise
+and, and bit-wise or.  Assume that you have two integers a and b:
+
+b = a >> k;  // This is to take the bits stored in a, and shift
+             // them the right by k bits.  Bits shifted out of the 
+             // least significant position are dropped.
+             // the most significant bit of a is replicated
+             // and shifted right. 
+b = a << k;  // This is to take the bits stored in a, and shift
+             // them the left by k bits.  Bits shifted out of the 
+             // most significant position are dropped.
+	     // 0's are shifted in from the least significant bit
+             
+If you are not dealing with unsigned integers, the left shift may turn
+a positive number into a negative number.  
+
+If you are dealing with unsigned integers, the right shift will shift
+in 0's from the most significant bit.
+
+My understanding of the ALU design is that the operations are typically 
+performed on a 32-bit register.  So, unless variable a is a long int,
+only the least signicant 5 bits of k will be used to decide the number of
+positions to shift.  If a is a long int, only the least significant 6 bits of k 
+will be used to decide the number of positions to shift.
+
+Also, if variable a is a short or char, if b is an int (32 bits), as the
+operation is carried out on a 32-bit register, b would be assigned the value
+as if variable a is an int.  However, if b is a long int, the value of
+b can become unpredictble because the shifting is performed based on 32 bits.
+
+To avoid unpredictable results, try to have variables a and b to be of the 
+same type.  In fact, it is common to do this:
+
+b = a;
+b >>= k; 
+
+In this exercise, the 8 bits or 5 bits representing a color should be treated
+as an unsigned value.  In other words, the 8 bits allow values 0 through 255
+and the 5 bits allow values 0 through 31.
+
+(Note that the following description is an example, not how we actually
+represent a pixel in a BMP file.)
+
+Suppose you have an integer, but only the 3 lower significant bytes are
+storing the color information of a pixel (for 24-bit representation).  
+The format RGB means that the red color (R) occupies a more significant 
+position and the blue color (B) occupies a less significant position.
+(Note that if I treat the int as an array of 4 unsigned chars, 
+say unsigned char *array, array[0] is B, array[1] is G, and array[2] is R.)
+
+To extract the value of RGB from the integer, say pixel, we can use bit-wise
+and operator:
+
+int red_value = (pixel & 0xFF0000) >> 16;
+int green_value = (pixel & 0xFF00) >> 8;
+int blue_value = (pixel & 0xFF);
+
+The operator & (which is different from logical and operator &&) performs
+"AND" operator at every corresponding bit position.  The bit pattern 
+0xFF0000 has eight 1's at the second most significant byte (of an int).
+When you "AND" 0xFF0000 with variable a, the result will match the 
+contents in pixel at only the second most significant byte; the most significant 
+byte, the second least significant byte, and the least significant byte 
+of the result will be 0.  Shifting the result by 16 bits will now store
+the correct value for the red color in the variable red_value.
+The pattern 0xFF0000 is called a bit mask.
+
+The bit masks for 16-bit representation for RGB are as follows (taken from the 
+new bmp.h. The rest of the bmp.h file is similar, except for the declaration of
+the the two additional functions that you have to write for this exercise.)
+
+/* bit positions of RGB in a 16-bit representation */
+/* R: 0111110000000000 */
+/* G: 0000001111100000 */
+/* B: 0000000000011111 */
+
+#define RED_MASK 0x7C00
+#define GREEN_MASK 0x03E0
+#define BLUE_MASK 0x001F
+
+/* position from the least significant position */
+
+#define RED_BIT 10
+#define GREEN_BIT 5
+#define BLUE_BIT 0
+
+Bit-wise and operation can be used to extract selected group of bits from
+an int (or any other types).  Bit-wise or operation |, which is different
+from logical or operator ||, can be used to put group of bits at selected 
+locations into an int (or any other types).
+
+Continuing with the 24-bit example, to assemble three bytes of RBG information
+into an int pixel, we can use 
+
+pixel = (red_value << 16) | (green_value << 8) | blue_value;
+
+Of course, we do not have to use any of these operations for 24-bit 
+representation, because each color is a byte, and therefore unsigned char can 
+easily represent each color.   You would have to use the shift, bit-wise and, 
+and bit-wise or to handle 16-bit representation, where bits 0 through 14 are 
+for the three colors.  The most significant bit should be 0 (and not used in 
+a meaningful way for this exercise).
+
+// ~ functions to be written in bmp.c ~//
+
+You have to build on top of the bmp.c file you have written for PE11.  These
+are the two additional functions that you will have to write.
+
+(6 points)
+// Given a BMP_Image, create a new 16-bit image that is converted from a given 
+// 24-bit image
+//
+BMP_Image *Convert_24_to_16_BMP_Image(BMP_Image *image);
+
+For the given image, you may assume that it is a valid 24-bit image (Otherwise,
+this function should not be called at all.)
+
+You have to take the 24-bit representation and convert it into a 16-bit
+representation.  You would have to compute the number of bytes in each 
+row (remember padding from PE11?) and the total image size, and therefore 
+the file size.  The header would have to be updated accordingly. 
+
+You have to downscale 8 bits to 5 bits for each color.  You have to scale 
+0 through 255 to 0 through 31.  This is fairly simple, a division by 8 or 
+a right shift of 3 position would do the trick.  In other words, you discard 
+the least significant 3 bits and retain the most significant 5 bits.
+
+The more difficult part is to combine the three color into two bytes (using 
+perhaps bit-wise or operation).  Lastly, you have to store the two bytes into
+the data array in BMP_Image.  I also believe that you have already learned a 
+few tricks in getting these two bytes.  For example, if the two bytes have 
+been stored in an int, you can apply the bit-wise and operation (and shift 
+if necessary) to extract the correct byte (see the overview section).  You 
+have also learned other tricks in the class.  You can treat an int as an 
+array of 4 bytes.  Of course, you can also use other types to store the 16 
+bits.  Examples are short, unsigned short, or even uint16_t.
+
+(4 points)
+// Given a BMP_Image, create a new 16-bit image that is converted from a given 
+// 24-bit image
+//
+BMP_Image *Convert_16_to_24_BMP_Image(BMP_Image *image);
+
+You cannot simply perform a left shift of 3 bit positions or a multiplication 
+of 8 map 0 through 31 to 0 through 255.  The reason is that in that case, you 
+will not have the highest possible value for 24-bit representation, which is 
+255.  Rather, you will have 248 as the highest value.  To make sure that the 
+highest intensity of 31 in a 16-bit representation is mapped to the highest 
+intensity of 255 in a 24-bit representation, you use the following formula:
+
+((5-bit value) * 255)/31 
+
+This conversion is important because you will rely on this in PA05.
+
+You may have to declare and define other functions in bmp.c.  However,
+do not name these functions with a prefix of two underscores "__".
+The best way to avoid name conflict is to use static functions.
+
+// ~ Function to be written in pe12.c ~ // 
+
+(2 points) Your main function should expect argv[1] as the input file 
+and argv[2] as the output file:
+
+If argv[1] does not provide you a valid BMP file, you should not produce a 
+new BMP file, and you should return EXIT_FAILURE.  Based on the 
+format of a valid BMP file, you should perform a 24-to-16 bit conversion
+or a 16-to-24 bit conversion.
+
+If for whatever reasons (insufficient arguments, memory allocation 
+problem, file opening issue, format issue), the conversion should
+not be performed, the output should not be printed and you should 
+return EXIT_FAILURE.
+
+Whenever you encounter errors and you want to print an error message,
+use stderr for printing, not stdout.  In such a case, always return 
+EXIT_FAILURE.
+
+Return EXIT_SUCCESS only if it is a successful conversion.
+
+You are responsible for opening and closing files, allocating and deallocating
+memory.
+
+// ~ error messages ~ //
+
+If you want to print error messages, use a statement similar
+to the following statements to print accordingly:
+
+fprintf(stderr, "A number expected\n");
+fprintf(stderr, "Invalid option.  -h or -v expected\n")
+fprintf(stderr, "Wrong number of arguments\n");
+fprintf(stderr, "Can't open input file\n");
+fprintf(stderr, "Can't read image from file\n");
+fprintf(stderr, "Can't crop the image\n");
+fprintf(stderr, "Can't open file for output\n");
+fprintf(stderr, "Error writing to output file\n");
+fprintf(stderr, "Error allocating memory\n");
+fprintf(stderr, "Error reading input file\n");
+fprintf(stderr, "Input file not in expected format\n");
+fprintf(stderr, "Image not in 16 bit format or 24 bit format.  Can't convert.\n");
+fprintf(stderr, "Can't convert the image\n");
+fprintf(stderr, "Not a 24-bit BMP format, can't convert\n");
+fprintf(stderr, "Not a 16-bit BMP format, can't convert\n");
+
+Note that all messages are printed to stderr (not stdout).
+Printing to stdout will result in grading problems.
+
+// ~ How do you test your functions ~ //
+
+You may use images in folder "images" in PE11.  
+The folder "converted" contains the images converted from those
+in "images".   car16.bmp is converted from car.bmp (in "images"), and 
+car24.bmp is converted from car16.bmp (in "images"), for example.
+
+If you follow the formula given in this README, your output should
+match those in "converted".
+
+You can use the "diff" function in linux to compare two your output
+and the files in "converted".
+
+If you run your executable on the "corrupted" folder in PE11, 
+the conversion should not take place.
+
+// ~ WARNINGS ~ //
+
+The following gcc command will be used for compilation:
+
+gcc -Wall -Werror -Wshadow -g pe12.c bmp.c -o pe12
+
+If you code does not compile, you will get zero for this exercise.
+
+We will check for memory problems.  Any memory issue will result in 
+a 50% penalty.

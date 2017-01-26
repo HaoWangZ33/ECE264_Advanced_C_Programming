@@ -1,0 +1,296 @@
+// ~ Overview ~ //
+
+This assignment builds on what you have done in PE11 and PE12.
+In this assignment, you will perform Floyd-Steinberg dithering (see 
+below) so that when you downscale the 24-bit bitmap representation
+to the 16-bit bitmap representation, the image continues to look
+reasonable.
+
+// ~ Learning Goals ~ //
+
+(1) To learn to read and write a structure into a file
+(2) To learn to manipulate arrays 
+(3) To perform bit-wise operations
+(4) To implement the Floyd-Steinberg dithering algorithm
+
+// ~ Submitting Your Assignment ~ //
+
+You must submit two files:
+
+(1) pa05.c
+(2) bmp.c
+
+You submit the two files using the following command.
+ 
+> 264submit PA05 pa05.c bmp.c 
+
+// ~ Floyd-Steinberg Dithering ~ //
+
+This is a continuation of PE11 and PE12.  In those two exercises, you 
+have created functions that (i) load in a BMP file into the structure BMP_Image
+(ii) convert a 24-bit BMP file into a 16-bit BMP file, (iii) 
+convert a 16-bit BMP file into a 24-bit representation, and (iv)
+write an image stored in the structure BMP_Image into a BMP file.
+
+The conversion of a 24-bit BMP file into a 16-bit BMP file results
+in some loss in accuracy.  When you use 32 levels (5-bit representation)
+to represent 256 levels (8-bit representation), the conversion suffers
+quantization error, which is defined as follows:
+
+16_bit_value = 24_bit_value >> 3;  // 16_bit_value = 24_bit_value / 8;
+equiv_24_bit_value_for_16_bit_value = (16_bit_value * 255) / 31;
+quantization_error = 24_bit_value - equiv_24_bit_value_for_16_bit_value;
+
+You should recognize that in the preceding three equations, you have
+seen the first two, which you have used for 24-bit-to-16-bit conversion 
+and 16-bit-to-24-bit conversion, respectively.
+
+In PE12, we simply ignore the quantization error.  As a consequence, the
+nice blue sky in the image airplane.bmp (see the image in PE11) became 
+a sky with 50 shades of blue :-).
+
+This is similar to the problem encountered in early days when we have 
+to use dot-matrix printer (you print a dot or you leave the spot clear)
+to print (gray scale) images.  We do not even have the luxury of 5 bit 
+representation for each color.  We have only one bit to say whether it is 
+to be printed with a dot or not.  So, assume that you have 8 levels of
+gray scale (3-bit representation), the quantization error is defined as 
+follows: 
+
+1_bit_value = 3_bit_value >> 2;  // 1_bit_value = 3_bit_value / 4;
+equiv_3_bit_value_for_1_bit_value = (1_bit_value * 7) / 1;
+quantization_error = 3_bit_value - equiv_3_bit_value_for_1_bit_value;
+
+The dithering algorithm diffuses the quantization error 
+of a pixel to 4 neighboring pixels, as follows 
+
+  . . . . . . . .
+  . . . X 7 . . .
+  . . 3 5 1 . . .
+  . . . . . . . .
+
+The quantization error of pixel X (at location (x,y)) is diffused to its 
+right pixel (x+1,y) with a weight of 7/16, to three pixels below X 
+(at locations (x-1, y-1), (x, y-1) and (x+1, y-1)) by a weight of 
+3/16, 5/16, and 1/16. Note that the denominator of 16 is for normalization 
+as the it is the sum of the weights 7, 3, 5, 1.
+
+(While a pixel contributes its quantization error to four neighbors,
+it also receives quantization errors from four neighbors.)
+
+Here, I am assuming that the pixels are stored in the file from the bottom
+to the top, and from the left to the right.
+
+By diffusion, it means that the weighted quantization error of X
+is added to the pixel values of its 4 neighbors.
+
+The following pseudo code shows that Floyd-Steinberg dithering algorithm.
+
+   /* Floyd–Steinberg dithering
+    * for each y from TOP to BOTTOM
+    *    for each x from LEFT to RIGHT
+    *       oldpixel  := pixel[x][y]
+    *       newpixel  := oldpixel scaled to fewer number of bits
+    *       pixel[x][y]  := newpixel
+    *       quant_error  := oldpixel - (newpixel scaled back to 
+    *                                    original number of bits) 
+    *       pixel[x+1][y  ] := pixel[x+1][y  ] + quant_error * 7/16
+    *       pixel[x-1][y-1] := pixel[x-1][y-1] + quant_error * 3/16
+    *       pixel[x  ][y-1] := pixel[x  ][y-1] + quant_error * 5/16
+    *       pixel[x+1][y-1] := pixel[x+1][y-1] + quant_error * 1/16
+    */
+
+Here, pixel[x][y] refers to a particular color (R, G, or B) of the pixel,
+and the weighted quantization error is added to the corresponding color
+of the neighboring pixels.  You have to do it for each color of RGB.  
+Also, you diffuse the quantization error to only valid pixel locations
+(the pseudo-code did not check for the validity of the locations). 
+
+Lastly, you have to combine the 5 bits of each color into 16-bit
+as in PE11.  It is important to note that addition of the quantization
+error may result in invalid value (> 255 or < 0).  You have to make
+sure that you are dealing with valid pixel value.  If the addition results
+in a value > 255, assign 255 to the pixel.  If the addition results in
+a value < 0, assign 0 to the pixel.
+
+The results of an implementation of the algorithm are shown in the
+folder "dithered".  You may compare the image airplane16_dithered.bmp
+and airplane16.bmp to see whether the 50 shades of blue have magically
+disappeared.
+
+// ~ function to be written in bmp.c ~//
+
+You have to build on top of the bmp.c file you have written for PE11 and PE12.  
+There is only one additional function that you have to write.
+
+(8 points)
+// Given a BMP_Image, create a new 16-bit image that is converted from a given 
+// 24-bit image
+//
+BMP_Image *Convert_24_to_16_BMP_Image_with_Dithering(BMP_Image *image);
+
+For the given image, you may assume that it is a valid 24-bit image 
+(Otherwise, this function should not be called at all.)
+
+You have to take the 24-bit representation and convert it into a 16-bit
+representation using the Floyd-Steinberg dithering algorithm.  Note that the 
+algorithm scans the pixels from the TOP to the BOTTOM, and from LEFT to RIGHT.
+In the file, the pixels are stored from the bottom to the top, and from left to 
+right.  
+
+As in PE12, You would have to compute the number of bytes in each row 
+(remember padding from PE11?) and the total image size, and therefore the file 
+size.  The header would have to be updated accordingly. 
+
+You have to downscale 8 bits to 5 bits for each color.  You have to scale 0 
+through 255 to 0 through 31.  This is fairly simple, a division by 8 or a 
+right shift of 3 position would do the trick.  In other words, you discard the 
+least significant 3 bits and retain the only the most significant 5 bits.
+
+You then have to compute the quantization error.  Pay attention that the 
+quantization error for a color is not computed between the 8-bit value and the 
+5-bit value.  Rather, it is between the 8-bit value and the 8-bit value 
+converted from the 5-bit value.
+
+The weighted quantization error has to be added to the original 8-bit value 
+of a color.  It is important that after the addition, you have a valid 8-bit 
+value of a color (non-negative and < 256).  
+
+However, as the quantization error has to be divided by 16 (and multiplied by
+either 1, 3, 5, or 7), the weighted quantization error from a single neighbor 
+will typically becomes zero.  Therefore, it is better to collect the   
+quantization errors (multiplied by 1, 3, 5, or 7) from all four neighbors, 
+and divided the sum by 16. 
+
+To summarize, the biggest challenge is to make sure that you implementation
+does not have an overflow issue, and that you can capture quantization error
+properly because the quantization error from just a neighbor may be small
+although the sum of quantization errors from all four neighbors is big enough
+to affect the pixel.
+
+As in PE12, you have to combine the three color into two bytes (using perhaps 
+bit-wise or operation).  Lastly, you have to store the two bytes into
+the data array in BMP_Image.  
+
+You may have to declare and define other functions in bmp.c.  Do not
+name your functions with a prefix of two underscores "__".
+You can avoid name conflicts by using static functions.
+
+// ~ Main function to be written in pa05.c ~ // 
+
+(2 points) This is almost identical to the main function you have
+written in PE12.  Your main function should expect argv[1] as the input file 
+and argv[2] as the output file:
+
+If argv[1] does not provide you a valid BMP file, you should not produce a 
+new BMP file, and you should return EXIT_FAILURE.  Based on the 
+format of a valid BMP file, you should perform a 16-to-24 bit conversion or
+a 24-to-16 bit conversion using the function you have just written:
+
+BMP_Image *Convert_24_to_16_BMP_Image_with_Dithering(BMP_Image *image);
+
+If for whatever reasons (insufficient arguments, memory allocation 
+problem, file opening issue, format issue), the conversion should
+not be performed, the output should not be printed and you should 
+return EXIT_FAILURE.
+
+Whenever you encounter errors and you want to print an error message,
+use stderr for printing, not stdout.  In such a case, always return 
+EXIT_FAILURE.
+
+Return EXIT_SUCCESS only if it is a successful conversion.
+
+You are responsible for opening and closing files, allocating and deallocating
+memory.
+
+// ~ error messages ~ //
+
+If you want to print error messages, use a statement similar to 
+one of the following to print accordingly:
+
+fprintf(stderr, "A number expected\n");
+fprintf(stderr, "Invalid option.  -h or -v expected\n");
+fprintf(stderr, "Wrong number of arguments expected\n");
+fprintf(stderr, "Can't open input file\n");
+fprintf(stderr, "Can't read image from file\n");
+fprintf(stderr, "Can't crop the image\n");
+fprintf(stderr, "Can't open file for output\n");
+fprintf(stderr, "Error writing to output file\n");
+fprintf(stderr, "Error allocating memory\n");
+fprintf(stderr, "Error reading input file\n");
+fprintf(stderr, "Input file not in expected format\n");
+fprintf(stderr, "Image not in 16 bit format or 24 bit format.  Can't convert.\n");
+fprintf(stderr, "Can't convert the image\n");
+fprintf(stderr, "Not a 24-bit BMP format, can't convert\n");
+fprintf(stderr, "Not a 16-bit BMP format, can't convert\n");
+
+Note that all messages are printed to stderr (not stdout).
+Printing to stdout will result in grading problems.
+
+// ~ Where are the other 10 points for this assignment ~ //
+
+The remaining 10 points will be distributed as follows:
+
+(2 points)
+BMP_Image *Read_BMP_Image(FILE *fptr);
+
+(2 points)
+int Is_BMP_Header_Valid(BMP_Header *bmp_hdr, FILE *fptr);
+
+(2 points)
+int Write_BMP_Image(FILE *fptr, BMP_Image *image);
+
+(4 points)
+BMP_Image *Convert_16_to_24_BMP_Image(BMP_Image *image);
+
+In other words, if you have done PE11 and PE12 properly, you
+have already obtained 50% of the grade.
+
+// ~ How do you test your functions ~ //
+
+You may use images in PE11 and PE12.
+I also included a new folder "dithered" for this assignment.
+It is unlikely that your program will match my output.  Therefore,
+we provide you an executable idiff_tol to compare two images.
+
+./idiff_tol max_count tol bmp_file1 bmp_file2
+
+The comparison takes place only if the two files have identical header 
+information.
+If not, the comparison stops. 
+
+Two pixels are checked for the RGB information.  The (absolute)
+differences in R, G, and B values are added.  If the sum is greater than 
+the tol (an integer), the two pixels are considered to be different.
+
+The first max_count pixels that are different will be reported.
+The coordinates are given.
+
+The last number in the output is the total number of pixels that are different.
+
+If you just want to count the number of different pixels, do
+
+./idiff_tol 0 0 bmp_file1 bmp_file2
+
+If you allow only one of the RGB values to differ by 1, and do not want to
+know the locations:
+
+./idiff_tol 0 1 bmp_file1 bmp_file2
+
+If you allow only the sum of the (absolute) differences
+of RGB values to be no more than 2, and want to know the first
+5 locations that are different:
+
+./idiff_tol 5 2 bmp_file1 bmp_file2
+
+// ~ WARNINGS ~ //
+
+The following gcc command will be used for compilation:
+
+gcc -Wall -Werror -Wshadow -g pa05.c bmp.c -o pa05
+
+If you code does not compile, you will get zero for this exercise.
+
+We will check your code for memory problems.  Any memory issue will result in 
+a 50% penalty.
+

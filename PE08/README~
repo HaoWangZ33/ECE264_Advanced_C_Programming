@@ -1,0 +1,269 @@
+// ~ Overview ~ //
+
+This exercise will familiarize you with 2-dimensional arrays and
+some more file operations.
+
+// ~ Learning Goals ~ //
+
+(1) To learn to create and manipulate 2-dimensional arrays using 
+malloc function.
+(2) To learn to free the memory allocated
+(3) To learn to perform file operations
+
+// ~ Submitting Your Assignment ~ //
+
+You must submit one file:
+
+(1) answer08.c
+
+You submit a zip file obtained using the following command:
+ 
+> zip PE08.zip answer08.c
+
+Submit the zip file through Blackboard.
+
+// ~ Overview ~ //
+
+This exercise will give you more practice with file operations, 
+and memory allocation.  It will also prepare you for the next programming 
+assignment PA03.
+
+In this exercise, you will write functions to:
+
+(1) To allocate space for store 2D array characters to represent a maze 
+(1 point)
+(2) To free space allocated for the 2D maze (1 point)
+(3) Read a 2D maze in a multi-line file into a 2D array of characters (2 points)
+(4) Write a 2D maze from a 2D array of characters into a multi-line file (2 points)
+(5) Expand an n_rows x n_columns 2D maze into an (2n_rows-1) x n_columns 2D maze (3 points)
+(6) Expand an n_rows x n_columns 2D maze into an n_rows x (2n_columns - 1) 2D maze (3 points)
+
+More details of the functions are provided below.
+
+// ~ Input file format (from PE07) ~ //
+
+In this exercise, we are concerned with only rectangular mazes.
+Consider a maze of r rows and c columns.  Both r and c are
+odd.  For example, the input file which contains the following lines 
+describes a maze with r = 7 and c = 9:
+
+XXXXX XXX
+X       X
+XXXXX X X
+X     X X
+XXXXXXX X
+X       X
+XXXXX XXX
+
+Note that in the input file, it would contain exactly 7 lines.
+Moreover, there is a newline character at the end of each line.
+Therefore, there are 10 characters in each line for this example;
+9 'X' or ' ' characters and a newline '\n' character.
+We number the rows from top to bottom as row 0 through row 6,
+and the columns from left to right as column 0 through column 8.
+This maze is contained in the file sample.2.7x9.
+
+You may assume that the file pointer contains a valid maze,
+and that it has been successfully opened for read operations. 
+However, you may not assume that the file location indicator
+is at the beginning of a file.  Also, you should not close a given
+file pointer.  However, if you open another file in your function, you 
+are responsible for closing that file.
+
+// ~ Functions to be written ~ // 
+
+This exercise requires you to use a structure called Maze to store a maze:
+
+typedef struct _Maze {
+   int nrow;
+   int ncol;
+   char **maze_array;  
+} Maze;
+
+The first function should allocate memory (using malloc) for a Maze
+structure.  The address of this structure should be returned to the
+caller function.  Note that you cannot declare a variable of type Maze
+in Allocate_maze_space and then return the address of this variable
+because that variable is no longer alive after the completion of 
+Allocate_maze_space.
+
+Within the allocated structure Maze, you have to store the dimensions
+of the maze (nrow and ncol), and also an address (maze_array) pointing to 
+a "2 dimensional array" of chars to store the nrow x ncol maze.  The array 
+is made up of an array of nrow char *'s, each of which point to 
+an array of ncol char's.   The function should return NULL if any of the 
+allocation is not successful.  Note that whenever there is a failure to 
+allocate memory in this function, all memory previously successfully allocated 
+in the function should be freed. 
+
+Given an address pointing to a Maze structure, the second function should 
+free all the space associated with this structure, includig the structure
+itself.  
+
+The third function reads a nrow-by-ncol maze contained in a file and store
+information of the maze in a Maze structure.  The information includes
+the dimensions of the maze and a 2D array that stores the valid characters 
+(PATH ' ' and WALL 'X') of a maze.  The newline character is not a valid
+character of a maze.  If maze is of type Maze *, maze->maze_array[i][j] 
+should store the character at row i and column j of the input maze.   Again, 
+we start counting row number and column number from 0.
+
+The fourth function writes a nrow-by-ncol maze stored in a Maze structure
+into a multi-line file (in the same format as the input file).  The returned 
+value is the total number of characters written.  It should correspond to the 
+file size when you use "wc" command to do a word count.  If you have read a 
+maze into a Maze structure using the third function, and then you write 
+the 2D maze stored in the Maze structure into a file, the output file should 
+be the same as the input file.  It is important that you insert a newline 
+character '\n' at the end of each row.
+
+The fifth function has to expand a nrow-by-ncol maze into a 
+(2*nrow-1)-by-ncol maze.  The first nrow rows of the new maze is
+the same as the nrow-by-ncol maze.  The next (nrow-1) rows of
+the new maze is a reflection of the first (nrow-1) rows of the 
+new (and old) maze.  For the example in sample.2.7x9, the expansion should 
+yield a maze shown below:
+
+XXXXX XXX
+X       X
+X XXX XXX
+X X X   X
+X X XXXXX
+X       X
+XXXXX XXX
+X       X
+X X XXXXX
+X X X   X
+X XXX XXX
+X       X
+XXXXX XXX
+
+The expanded maze can be found in the file rsample.2.13x9.
+
+The sixth function has to expand a nrow-by-ncol maze into a 
+nrow-by-(2*ncol-1) maze.  The first ncol columns of the new maze is
+the same as the nrow-by-ncol maze.  The next (ncol-1) columns of
+the new maze is a reflection of the first (ncol-1) columns of the 
+new (and old) maze.  However, because the given maze does not have
+an opening on the left and right wall, we have to create an
+opening at the middle (row nrow/2) of the center wall (column ncol - 1) 
+of the new maze.  To do that, you have to convert the location at
+(nrow/2, ncol - 1) into a location for path.  You have to continue
+to perform the same operation of converting a location with wall into
+a location for path to the left and right of this middle location
+until you are at a location adjacent to a location for path.
+For example, if you have the following maze (sample0):
+
+XXXXX XXX
+X       X
+XXXXX X X
+X     XXX
+X XXXXX X
+X       X
+XXXXX XXX
+
+The expansion without the conversion would yield:
+
+XXXXX XXXXX XXXXX
+X       X       X
+XXXXX X X X XXXXX
+X     XXXXX     X
+X XXXXX X XXXXX X
+X       X       X
+XXXXX XXXXX XXXXX
+
+If we only replace the middle location that currently has wall with path
+as shown below, the left and right sides are still not connected:
+
+XXXXX XXXXX XXXXX
+X       X       X
+XXXXX X X X XXXXX
+X     XX XX     X
+X XXXXX X XXXXX X
+X       X       X
+XXXXX XXXXX XXXXX
+
+You will connect the left and right sides by performing the conversion
+to the left and right of the middle location until you hit a location that
+is adjacent to a location for path.  In this particular example, we just
+have to convert the locations to the left and right of the middle location
+(in file sample3):
+
+XXXXX XXXXX XXXXX
+X       X       X
+XXXXX X X X XXXXX
+X     X   X     X
+X XXXXX X XXXXX X
+X       X       X
+XXXXX XXXXX XXXXX
+
+For the example in the file sample.2.7x9, the expansion should yield
+a maze shown below:
+
+XXXXX XXXXX XXXXX
+X       X       X
+X XXX XXXXX XXX X
+X X X       X X X
+X X XXXXXXXXX X X
+X       X       X
+XXXXX XXXXX XXXXX
+
+This maze is contained in the file csample.2.7x17.
+
+These functions should be written in answer08.c.  A brief description
+of these functions can be found in answer08.h.   
+
+// ~ WARNINGS ~ //
+
+You will have to write a main function so that you can test these
+six functions.  However, you SHOULD write the main function in
+a separate file called pe08.c.  If you include the main function 
+in answer08.c, we will not be able to compile your answer08.c,
+and you will get zero for this exercise.  
+
+The main function that the instructor will write also 
+resides in pe08.c.  The following gcc command will be used for
+compilation:
+
+gcc -Wall -Werror -Wshadow -g pe08.c answer08.c -o pe08
+
+If you code does not compile with the instructor's pe08.c, you will get 
+zero for this exercise.
+
+You should write a Makefile to help you with the compilation. 
+However, you do not have to submit this Makefile.
+
+You cannot assume that the given file pointer will point at 
+a particular location in the file.  If you do not set the file position
+properly at the beginning of the function call, it is unlikely that you 
+will pass any of our tests.  
+
+Do not close the given file pointer in any of these functions.
+You are responsible for closing any file pointer you have opened.
+
+In the answer08.h file, there are several declared functions, each with
+a name that has a prefix of "__".  We rely on these functions
+to test your individual function.  In order for us to do that:
+
+(1) You have to realize that the answer08.c file does not contain 
+the skeleton of these "__" functions.  Do not define these functions
+in answer08.c.  If you define these functions in answer08.c, we cannot
+test your individual functions.
+
+(2) Do not attempt to call any of these functions in your function.
+If you do that, your program will not compile, and we will not give
+your partial credit for any of the individual functions.
+
+We will use valgrind to make sure that you close all files
+that you have opened.  If a function is returning an address
+pointing to a structure, that function should not be responsible
+for freeing the memory for that structure and other memory associated
+with that structure.  For example, Allocate_maze_space returns Maze *.
+In that case, the Maze structure whose address is returned should not be
+freed by Allocate_maze_space.  
+
+We will check that when we call the deallocation function, we can free 
+the memory associated with the structure.  Failure to close a file you have 
+opened or failure of your deallocation function to free the memory for 
+storing the mazes properly will result in a 50% penalty.  Any other form
+of memory issues will also result in 50% penalty.

@@ -1,0 +1,162 @@
+This assignment continues PE05/PE06.
+
+/* Performing k rounds of shuffling */
+
+In PE06, your program gets a deck of cards and shuffle this deck once.
+The program prints the possible orders (with repetitions) after one round 
+of shuffling.  You may have noticed that shuffling only once does not 
+produce all possible orderings of a deck of cards.  For example, if the 
+original deck has 4 cards, the number of all possible orderings is 24.
+However, shuffling a deck of cards once will give us only 14 orderings, 
+not 24.  Moreover, some of the 14 results are the same.  Note that 24 is
+4!, and 14 is 2^4 - 2.  If we are dealing with 5 cards, there are 
+5! possible orderings, but shuffling once will give us only (2^5 - 2)
+orderings (with repetitions).
+
+This assignment extends the exercise to print the possible orderings
+of a deck after k rounds of shuffling, using the function 
+
+void repeatShuffle (CardDeck origdeck, int k);
+
+where the first parameter is the original deck (origdeck) and the second
+parameter is the number of rounds of shuffling to be performed.  We assume
+that a round of shuffling is always performed on a complete deck of cards.
+It involves dividing a deck of cards into non-empty upper and lower decks,
+and interleaving the two decks into a complete deck again.  The next round
+of shuffling, if any, should be performed on the complete (shuffled) deck, 
+and the process continues until all k rounds of shuffling have been performed.
+
+The sample output for a deck [A234] shuffled 3 times is given as a
+reference.  Shuffling once produces 14 (= 2^4 - 2) lines.  For each of these
+orderings, we perform another shuffling to produce 14 possible orderings 
+(with repetitions).  Therefore, the second round of shuffling will produce
+14*14 possible orderings (with repetitions).  Consequently, shuffling 3 times 
+produces 2744 (14*14*14) lines altogether.  It is acceptable that the possible
+orderings produced by your program do not match the order in which the 
+possible orderings appear in the listing produced by the instructor's code.  
+However, when your listing and the instructor's listing are sorted, they
+should match line by line.  Please print only the final results
+(i.e., all possible orderings with repetitions after all k rounds of 
+shuffling).  Do not print the intermediate results.
+
+/* Possible implementations */
+
+It is likely that the functions used in PE05/PE06 require some adjustments.
+More specifically, you probably have to add some more parameters to the
+functions written for PE06 in order to keep track of how many times
+the cards have been shuffled or how many more rounds of shuffling remain.  
+One purpose of this assignment is to encourage you to think about how 
+to modify the program written for PE05/PE06 for this assignment.  When you 
+reuse the code from PE05/PE06, be sure to remove the #ifdef-#endif pairs in 
+the program.   The answer06.c file included in this folder has those
+pairs removed for you.  
+
+Here are some hints:
+
+1.  repeatShuffle is similar to shuffle in PE06, except that it has
+an additional parameter to keep track of the number of rounds (int k) 
+to shuffle cards. 
+
+2.  repeatShuffle can be written as a part of a recursive paradigm,
+but it does not call itself.  (In all exercises so far, all recursive
+functions call themselves directly.)  Here, you may want to consider the
+case that repeatShuffle calls another function, which then calls
+repeatShuffle, but with a smaller problem size.  (What is the problem
+size in this recursive paradigm?)  In other words, repeatShuffle is called 
+recursively in an indirect fashion.
+
+3.  When the number of rounds of shuffling is zero, what should 
+repeatShuffle do?  This is the terminating condition for repeatShuffle.
+Recall that this function is supposed to print possible outcomes (with
+repetitions) after k rounds of shuffling.  If k = 0, what should be 
+printed?  Are there other terminating conditions?
+
+4.  If the number of rounds (int k) of shuffling is greater than zero, 
+repeatShuffle should perform what you did in PE06, i.e., find all possible
+pairs of dividing cards, and for each pair, perform interleaving.
+
+5.  When you are done with interleaving an upper deck and lower deck
+and obtain a complete deck of cards, you have completed one round of 
+shuffling.  Now, you have to perform (k-1) more rounds of shuffling.  What 
+function can you call to perform (k-1) rounds of shuffling of a 
+deck of cards?
+
+If you know the answers to these questions, your answer02.c in PA02 should 
+look very similar to answer06.c in PE06.
+
+You can also have an implementation that uses an array to store the
+results of one round of shuffling.  Another round of shuffling can then
+be applied to each deck in the array.  You would have to allocate
+space for the storage of intermediate results, and you should also be 
+responsible for freeing the space when you no longer need them.
+
+/* Grading of assignment */
+
+For debugging purposes, you can print the intermediate results but the
+debugging information should be turned off before submission.  As you
+can see from the grading scheme below, the presence of intermediate
+results (orderings from the 1st round, 2nd round, ..., (k-1)st round 
+of shuffling) will severely degrade your score.
+
+This assignment has 20 points for repeatShuffle only.  
+This is how we assign points.  Let's assume that a test case is worth z points.
+For each test case, let the number of correct output be y.  Let's assume that
+you have y' lines of output.   If y and y' match in x lines, you have
+x correct answers and (y' - x) incorrect answers.  For this test case,
+you earn (max(0, x/y - (y'-x)/y))*z points.  In other words, while you
+earn points for correct answers (x/y)*z, you will be deducted
+((y'-x)/y)*z points for incorrect answers.  However, you will not get negative
+points.
+
+If your function has memory errors, you will lose 50% of the points.
+Moreover, if the amount of allocate memory is not determined by the size
+of the original deck, but by a fixed amount, you will also lose 50% of the
+points.
+
+/* Testing your implementation */
+
+Always check whether you have correct number of lines for the output for
+a given card size and a given number of rounds of shuffling.
+
+For ease of testing, I suggest that you modify pa02.c to accept two 
+arguments: argv[1] could be the number of cards in a deck, and argv[2] the 
+number of rounds of shuffling to be performed.  
+
+Please note that having too many rounds of shuffling will generate
+a large number of possible orderings.  This may affect your testing
+in three ways:
+
+1.   Your implementation may require you to allocate memory to store the
+orderings.  If the number of rounds of shuffling is too high, you may run
+out of memory.  (If you run out of memory, you should free the memory
+you have allocated so far, and return EXIT_FAILURE from the main function).
+Therefore, it is important that after you call malloc, you always check to
+see whether the malloc function is successful in returning a non-NULL 
+address.
+
+2.   For your testing, you probably want to save the output to a file.  
+
+> ./pa02 4 3 > ordering_output
+
+The screen output will be redirected and be stored in the file 
+ordering_output.  Too many rounds of shuffling may result in an extremely 
+large file, and you may run out of disk quota.
+
+Therefore, you should not attempt a large number of rounds of shuffling
+during testing AND also redirect the screen output to a file.  It is fine
+to attempt a large number of rounds of shuffling, without redirecting the
+screen output to a file, to stress test your memory allocation, if necessary.
+
+3.  Depending on your implementation, you may have a deep recursion that
+exhaust all space on the call stack.
+ 
+/* What to submit */
+
+You have to submit a zip file PA02.zip that contains only one file: answer02.c.
+
+> zip PA02.zip answer02.c 
+
+/* Other relevant information */
+
+The printDeck function in utility.c has been updated to print a newline 
+after printing a deck.

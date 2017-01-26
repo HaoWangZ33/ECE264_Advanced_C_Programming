@@ -1,0 +1,43 @@
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
+#include "answer10.h"
+
+int main(int argc, char ** argv)
+{
+	FILE* infile;
+	long int* array;
+	charnode* head;
+	treenode* tree;
+
+	if (argc != 5) {
+		fprintf(stderr, "Usage: ./pe10 inputfile outputfile1 outputfile2 outputfile3\n");
+		return EXIT_FAILURE;
+	}
+   
+	infile = fopen(argv[1], "r");
+	if (infile == NULL) {
+		fprintf(stderr, "Failure to open inputfile");
+		return EXIT_FAILURE;
+	}
+
+	array = (long int*)malloc(sizeof(*array) * 256);
+	if (array == NULL) {
+		fclose(infile);
+		fprintf(stderr, "Malloc fail");
+		return EXIT_FAILURE;
+	}
+	read_file(array, infile);
+	fclose(infile);
+	print_array(array, argv[2]);
+
+	head = construct_list(array);
+	free(array);
+	print_list(head, argv[3]);
+
+	tree = construct_tree(&head);
+	print_tree(tree, argv[4]);
+	tree_destroy(tree);
+	charnode_destroy(head);
+	return EXIT_SUCCESS;
+}

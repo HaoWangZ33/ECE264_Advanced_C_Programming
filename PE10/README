@@ -1,0 +1,162 @@
+// ~ Overview ~ //
+
+This exercise will familiarize you with linked lists and trees, which would
+be useful for a subsequent programming assignment.
+
+// ~ Learning Goals ~ //
+
+(1) To learn to create and manipulate linked lists and trees.
+(2) To learn to free the memory associated with a linked list and a tree.
+
+// ~ Submitting Your Exercise ~ //
+
+You can submit any number of files.  The only requirment 
+is that you must include a Makefile.  The Makefile should
+allows us to compile your source code and generate
+an executable called pe10.
+
+Your files should reside in a folder called PE10 and you create a 
+zip file as follows.
+
+> zip PE10.zip PE10/*
+
+Of course, you issue the above command in the folder containing 
+PE10, and not in the PE10 folder.
+
+Submit the zip file through Blackboard.  
+
+// ~ Overview ~ //
+
+Please read the file (using a web browser) pe10_pa04.htm in the
+folder pe10_pa04.  To open a file from a browser, use "File->Open File..."
+for Firefox, for example.  This exercise and the associated assignment
+deals with Huffman coding, and in particular, it deals with the 
+construction of a Huffman coding tree.  Therefore, please read the 
+section on "Huffman Coding" before you proceed with the remainder of 
+this README.
+
+READ THE FILE pe10_pa04.htm BEFORE YOU PROCEED.
+
+For this exercise, you are given the flexibility of designing
+your .h file and you have to write a program (may reside in 
+several .c files) that takes in an input file, and produces
+three output files:  
+
+> ./pe10 input_file output_file_1 output_file_2 output_file_3
+
+The input file (input_file) can be any files of size up to 2^(63)-1 (LONG_MAX) 
+characters.   Some small sample input files are given in the folder examples: 
+gophers, lorum, stone, woods.
+
+The three output files (output_file_1, output_file_2, and output_file_3)
+are as follows:
+
+1.   output_file_1:  A file with 256 lines as output.   Line i, 0 <= i < 256,
+should be the number of occurrences of ASCII character i in the input file.   
+The number of occurences in each line should be printed with the format 
+string "%ld\n".
+
+The corresponding output files for the input files are gophers.count,
+lorum.count, stone.count, and woods.count.
+
+2.   output_file_2:  A file with only 1 line if the newline character is not 
+present in the input file.  Otherwise, there should be 2 lines in this file.
+This is a file that shows only characters that have appeared in the
+input file.  Moreover, the characters will appear in ascending order
+with respect to the numbers of occurrences.  If two characters have
+the same number of occurrences, the character with the higher ASCII
+value should appear later.  The format of the file is shown as a linked
+list:
+
+character_1:count_1->character_2:count_2->...->character_k:count_k->NULL
+
+where character_1 through character_k are ASCII characters that appear 
+in the input file.  count_1 <= count_2 <= ... <= count_k.  If 
+count_i is the same as count_i+1, character_i < character_i+1.
+There is a newline after "NULL".  The character_i:count_i pair is printed
+using the format string "%c:%ld".
+
+The easiest way to get this output file is to enqueue the characters
+(together with their counts) into a priority queue, and then print 
+the list (see PE09).  You should design and define a structure
+that would allow you to enqueue a character and its count at the
+same time into a priority queue.  Take into consideration what you
+have to do for the third output file before you decide on your user-defined
+structure.
+
+The corresponding output files for the input files in the examples
+folder are gophers.sorted, lorum.sorted, stone.sorted, and woods.sorted.
+
+3.  output_file_3:  The file contains as many lines as the number of distinct 
+characters that appear in the input file.  Each distinct character should have 
+a line in this output file with the format of 
+
+character:stream_of_0_and_1
+
+where the stream of 0 and 1 (as character '0' and character '1') being
+the binary pattern corresponding to the Huffman code of the character.
+The following output files for the input files in the examples folder 
+are gophers.huffman, lorum.huffman, stone.huffman, and woods.sorted.
+
+To produce this output file, it is essential that you build a Huffman
+coding tree based on the description in the section on "Huffman Coding"
+in the pe10_pa04.htm file.  The construction of a Huffman coding
+tree requires you to maintaiin a priority queue of partially
+constructed Huffman coding trees.  In these coding trees, all leaf
+nodes are ASCII characters with their respective counts in the input file.
+
+Therefore, we suggest that you define a structure that could be
+used for the generation of both the second output file and the third output 
+file.  In particular, a tree structure with fields in each node to store 
+an ASCII character and its count would be useful.  While a leaf node will
+store an ASCII character, you will have to decide what should be stored
+in the same field for non-leaf node.  The count field of a node should store 
+the total of the counts in the leaf nodes below the node.
+
+As mentioned in the "Huffman Coding" section, the priority is defined based 
+on the counts.  If two trees have the same total count (of their respective 
+leaf nodes), a tree that corresponds to a single leaf node should have a 
+higher priority.  If both trees are leaf nodes themselves, the ASCII values 
+should determine the priority.  Otherwise, the order in which the trees are 
+created should determine the priority.  When two trees are dequeued from the 
+priority queue, the first node dequeued should be the left branch of the 
+newly constructed coding tree, and the second node dequeued should be the 
+right branch of the newly constructed coding tree.  You have a Huffman coding
+tree when there is only tree in the entire list.
+
+The order in which you print the characters and their codes in the third 
+output file is determined by a tree traversal that visits the left branch
+followed by the right branch.  In the tree traversal process, a left branch
+correspond to a '0' and a right branch corresponds to a '1'.  (In reality,
+it is a 0-bit and a 1-bit, but for the purpose of this exercise, we use '0' 
+character and '1' character).  You print the character and its code when 
+you reach a leaf node in the tree traversal.  What you have done in PA02
+(and its related exercises) should be useful here.
+
+// ~ How we grade your submission ~ //
+
+You should submit only .c files, .h files, and a Makefile.  We will
+use the Makefile to compile and we expect an executable called "pe10".
+The command "make" should generate "pe10".
+
+If we fail to obtain "pe10", you do not receive any credit for this
+exercise.  It is important that you use the flags "-Wall -Werror -Wshadow"
+in the Makefile for the compilation.  If you fail to use these flags, you
+do not receive any credit for this exercise.
+
+The executable expects 4 arguments: 1 input filename followed by 3 output
+filenames.
+
+You earn points by producing the correct output files.  If we assign 1 point
+to each case, the first output file will earn you 1/4, the second
+output file 1/4, and the third output file 1/2.
+
+The maximum score for this exercise is 12 points.
+ 
+When the input file is of size 0 or when the input file cannot be opened, 
+you should not produce any output files.  Output files are expected when the 
+input file is not empty and can be opened.
+
+We will use valgrind to make sure that your program does not have any
+memory problems.  Any form of memory issues will result in 50% penalty.
+

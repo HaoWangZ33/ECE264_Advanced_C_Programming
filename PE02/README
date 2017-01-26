@@ -1,0 +1,371 @@
+In this exercise, you will implement two different ways to 
+perform numerical integration of a function (unknown to you).
+This exercise is related to PE03 and PA01.  
+
+// ~ Learning Goals ~ //
+
+You should learn:
+(1) How to perform two methods to perform numerical integration of 
+a function
+(2) How to use argc and argv correctly in main.
+
+// ~ Getting Started ~ //
+
+The PE02 folder contains six files:
+(1) answer02.c: this is the file that you hand in. It has the descriptions
+of two numerical integration methods in it, and you must implement the numerical
+integration methods in these functions.
+(2) answer02.h: this is a "header" file and it declares 
+the functions you will be writing for this exercise.
+(3) pe02.c: You should use this file to write the main function that would
+call the appropriate numerical integration function.
+(4) pe02_aux.h: an include file to declare the function to be integrated
+(5) pe02_aux.o: provide the object code for the function to be integrated
+(6) README: this file.
+
+To get started, read this README in its entirety. Browse through the 
+answer02.h and answer02.c files to see what code needs to be written. You 
+will be writing code in the answer02.c file. You will also write code in the 
+pe02.c file to call the correct functions in answer02.c.  Both answer02.c
+and pe02.c contain comments telling you the code that needs to be written in 
+answer02.c and pe02.c, respectively. 
+
+Follow the discussions below on how to compile and run your code, as
+well as on how to test and submit it.
+
+// ~ Submitting Your Assignment ~ //
+
+You must submit two files:
+(1) answer02.c (8 points): 4 points for each of the two integration 
+functions
+(2) pe02.c: main function (4 points)
+
+To submit the files, zip the two files using the following command:
+
+> zip PE02.zip answer02.c pe02.c 
+
+Submit PE02.zip through Blackboard.
+
+// ~ (1) Numerical integration ~ //
+
+We assume that you understand what it means to integrate a function over
+a range.  Given a function f(x), the integration of the function over a range
+[a, b] is represented as 
+
+\int_{a,b} f(x) dx
+
+in this README.  
+
+For example, 
+
+\int x dx = (x*x)/2 + C, where C is a constant
+
+With the formula given above, we can integrate over a range:
+
+\int_{2,10} x dx = (10*10)/2 - (2*2)/2 = 48
+
+If the order of the limits of the range is reversed,
+
+\int_{10,2} x dx = (2*2)/2 - (10*10)/2 = -48
+
+In the preceding examples, we know the analytical form of the integral, 
+therefore, we can calculate the integral over the range [2,10] or 
+[10,2] precisely.
+
+In reality, we may be dealing with a function that does not have an
+analytical form.  For example, we do not have a function, but only 
+samples (x, f(x)) obtained at different x's.  In the engineering world, 
+we encounter that frequently when we use sensors to measure certain aspects 
+of the environment.  In that case, x is the time and f(x) is the sensed 
+datum.
+
+The integral of the function (called integrand) may be too complicated or
+impossible to calculate.  There are also cases that it is impossible to
+write down in analytical form the integrand.  
+
+Therefore, we have to use numerical integration to approximate the integrand.
+There are many different numerical integration methods.  We will focus on 
+two in this exercise:  the mid-point rule and the trapezoidal rule.  You
+will work on the Simpson's rule in PE03.
+
+// ~ (1a) Mid-point rule ~ //
+
+Consider the approximation of 
+
+\int_{a,b} f(x) dx
+
+The mid-point rule approximates the integration by using the area of a
+rectangle.  Let m = (a+b)/2, we find f(m) and use it as the height of the
+rectangle.  The width of the rectangle is defined to be (b-a).  (Note
+that (b-a) may be negative if b < a.) The integration is approximated as 
+
+\int_{a,b} f(x) dx    ~      (b-a) * f((a+b)/2) = (b-a) * f(m).
+
+Of course, this may not be accurate.  The accuracy may be improved if
+we divide the range into many intervals.  Let n be the number of intervals.  
+The step size is defined to be (b-a)/n.  We can define
+\int_{a,b} f(x) dx    = \int_{a, a+(b-a)/n} f(x) dx + 
+                        \int_{a+(b-a)/n, a+2*(b-a)/n} f(x) dx + 
+                        ... +
+                        \int_{a+(n-1)*(b-a)/n, b} f(x) dx
+
+Now, we can apply the mid-point rule to each of the intervals.  The
+sum of all approximations of the intervals is an approximation to 
+\int_{a,b} f(x) dx.
+
+// ~ (1b) Trapezoidal rule ~ //
+
+Consider the approximation of 
+
+\int_{a,b} f(x) dx
+
+The trapezoidal rule approximates the integration by using the area of a
+trapezoid.   The heights of the two parallel sides of the trapezoid are
+f(a) and f(b).  The width of the trapezoid is defined to be (b-a).  
+The integration is approximated as 
+
+\int_{a,b} f(x) dx    ~      (b-a) * (f(a)+f(b)) / 2.
+
+Of course, this may not be accurate.  The accuracy may be improved if
+we divide the range into many intervals, and apply the trapezoidal
+rule to each interval.  The sum of all approximations of the intervals
+is an approximation to \int_{a,b} f(x) dx.
+
+// ~ (2) Functions you have to write ~ //
+
+You are to write two functions in answer02.c and the main function in
+pe02.c.
+
+// ~ (2a) Mid-point rule based numerical integration (4 points) ~//
+
+The function implementing the numerical integration method based on the
+mid-point rule is declared in answer02.h as
+
+double mid_point_numerical_integration(double lower_limit, double upper_limit, int n_intervals);
+
+The parameters lower_limit and upper_limit correspond to the limits of the
+range [a,b] of 
+
+\int_{a,b} f(x) dx
+
+In other words, a = lower_limit and b = upper_limit.
+
+The parameter n_intervals corresponds to the number of intervals we divide
+the range [a,b]. You may assume that n_intervals >= 1 for this function.
+The caller function has to pass in an int greater or equal to 1.
+
+For this exercise, f(x) is called function_to_be_integrated(double x),
+which is declared in pe02_aux.h, and defined in pe02_aux.c.  However, you
+are not provided pe02_aux.c.  Instead, you are given the object code 
+pe02_aux.o.  You have to include pe02_aux.h in your answr02.c file and
+call function_to_be_integrated in mid_point_numerical_integration.
+
+You are required to implement in answer02.c the numerical integration method 
+based on the mid-point rule, with the range [lower_limit, upper_limit] 
+divided into n_intervals intervals.
+
+The sum of the approximations for all intervals should be returned. 
+ 
+// ~ (2b) Trapezoidal rule based numerical integration (4 points) ~ //
+
+The function implementing the numerical integration method based on the
+trapezoidal rule is declared in answer02.h as
+
+double trapezoidal_numerical_integration(double lower_limit, double upper_limit, int n_intervals)
+
+You are required to implement in answer02.c the numerical integration method 
+based on the trapezoidal rule, with the range [lower_limit, upper_limit] 
+divided into n_intervals intervals.
+
+The sum of the approximations for all intervals should be returned. 
+
+// ~ (2c) The main function (4 points) ~ //
+
+The executable of this exercise expects 4 arguments.  If the executable is
+not supplied with exactly 4 arguments, return EXIT_FAILURE.
+
+The first argument specifies which of the two integration functions 
+you are supposed to run.  If the first argument is "-m", you should
+use the mid-point-rule-based method to perform the numerical integration.
+If the first argument is "-t", you should use the trapezoidal-rule-based 
+method to perform the numerical integration.  If the first argument
+does not match "-m" or "-t", the executable should exit and return
+EXIT_FAILURE.
+
+The second argument provides the lower limit (double) of the integral. 
+You should use atof (from stdlib.h) to convert the second argument into 
+a double.
+
+The third argument provides the upper limit (double) of the integral. 
+You should use atof to convert the third argument into a double.
+
+The fourth argument provides the number of intervals (int) you should use 
+for the approximation.  You should use atoi (from stdlib.h) to convert the
+fourth argument into an int.  If the conversion of the fourth argument 
+results in an int that is less than 1, you should supply 1 (numeric one) 
+as the number of intervals for approximation.
+
+The converted values from second, third, and fourth arguements should be
+supplied to the appropriate integration function.  
+
+Upon the successful completion of the numerical integration, print
+the approximation using the format "%.10e\n" using the function
+printf. (That is the format to be used, and this is the only printf
+statement in the entire exercise.  If you print other messages, your
+exercises will most likely receive a lower score.)
+
+After printing, return EXIT_SUCCESS from the main function.
+
+// ~ (3) Compilation and testing your program ~ //
+
+You should compile your program with the following command:
+
+> gcc -Wall -Wshadow -Werror -g pe02.c answer02.c pe02_aux.o -o pe02
+
+// ~ (3a) Running your program ~ //
+
+To run your program using the mid-point rule-based integration method,
+you can use for example,
+
+> ./pe02 -m 0.0 10.0 5
+
+As it is, this would simply print to the screen 
+
+0.0000000000e+00
+
+// ~ (3b) Testing your program ~ //
+
+How do you know whether your implementation is correct when 
+you have no idea what function you are integrating?  Well,
+the integration methods are supposed to work on all functions.
+What you can do is to test your implementation on some 
+known functions (and functions whose integrands you 
+are familiar with).
+
+You can write your own function_to_be_integrated in a
+different file.  Let's call that file pe02_my_aux.c.
+Now, you compile with the following command:
+
+> gcc -Wall -Wshadow -Werror -g pe02.c answer02.c pe02_my_aux.c -o pe02
+
+Your implementation of function_to_be_integrated should include
+simple functions such as:
+
+f(x) = 1
+f(x) = x
+
+In these cases, the numerical integration should be exact
+because we are integrating a constant function or a linear function.
+
+You can try to use piece-wise linear function, such as:
+
+f(x) = 0,       if x < 1, 
+     = (x - 1), if x >= 1
+
+You can try quadratic functions or functions with higher order.
+You can also try functions available in math.h.  However,
+in that case, you will have to compile with the -lm option:
+
+> gcc -Wall -Wshadow -Werror -g pe02.c answer02.c pe02_my_aux.c -o pe02 -lm
+
+Note that this is in fact how we are going to evaluate your implementation,
+by using different implementations of function_to_be_integrated.
+
+For each known function that you have implemented in 
+pe02_my_aux.c, you should try to perform integration with only 1 interval,
+and then 2 intervals, and perhaps some other numbers of intervals.
+You should choose a number of intervals that is easy for you to verify the
+correctness of your implementation.  You may want to choose the number
+of intervals together with an appropriate pair of lower and upper limits. 
+For example, if you choose 3 as the number of intervals, it would
+be easier for you to work out the expected solution by hand if difference
+of upper limit and lower limit is divisible by 3.  
+
+Also, pick the lower and upper limits so that you can verify the results 
+by hand easily.  For example, if the number of intervals is 10, and if the 
+method for integration is based on the mid-point rule, it may be better 
+to use a lower limit of 0.5 and an upper limit of 10.5 because the 
+mid-points for the 10 intervals would be integers, which might be easier
+for you to evaluate.  On the other hand, if the method is based on
+the trapezoidal rule, it may be better to use a lower limit of 0 and 
+an upper limit of 10 because the left and right end points of the 
+intervals would be integers.
+
+You can also use your implementation to check against your implementation.
+Let's assume that you have verified that your implementation is correct
+when you use only 1 interval for integration.  Let's pick a lower limit of 
+0 and an upper limit of 10, and you use 10 intervals.  You can run the 
+case for integration with 1 interval 10 times, each time with different 
+ranges: 0 and 1, 1 and 2, 2 and 3, ..., 9 and 10.  The results you get from 
+all 10 ranges should be summed and compared to the result when you run it 
+on the case of 10 intervals with 0 and 10 being the limits.
+
+Be aware that you are dealing with floating point representation (in double)
+in this exercise.  The order of arithmetic operations performed in your
+implementation is likely different from your classmates' implementations
+and my implementation.  You should not expect your printed output to match 
+others even with the same pair of limits and the same number of intervals.
+Similarly, if you use your implementation to test against your implementation, 
+you should not expect the sum of the 10 results to match the result from a 
+single run exactly.  The reason is that when a double is printed through the 
+format "%.10e\n", there is some loss in accuracy in the printed double on 
+the screen because the format prints only the first 10 significant numbers
+after the decimal point.
+
+// ~ (4) Running ./pe02 Under Valgrind ~ //
+
+You should also run ./pe02 with arguments under valgrind.
+To do that, you have to use for example the following command:
+
+> valgrind --tool=memcheck --leak-check=yes --log-file=memcheck.log ./pe02 -m 0.0 10.0 5
+
+It is unlikely that you will have memory problems in this exercise.  
+It is just a good habit to cultivate.
+
+It is possible to run valgrind with the simple command below.  
+
+> valgrind ./pe02 -m 0.0 10.0 5
+
+You will get the log messages from valgrind on the screen.
+ 
+// ~ Warning ~ //
+
+Other than the approximated integral, you should not be printing anything 
+else.  If the output of your program is not as expected, you get 0 for that 
+test case.
+
+Bottomline: You should not use printf to debug.  
+
+You are not submitting answer02.h and pe02_aux.h.  Therefore, you should
+not make changes to these .h files.
+
+You can declare and define additional functions that you have to use in
+pe02.c and answer02.c.  Make sure that these functions are declared before
+they are called in any other functions.  
+
+// ~ Summary ~ //
+
+# Compile 
+> gcc -Wall -Wshadow -Werror -g pe02.c answer02.c pe02_aux.o -o pe02
+
+or other command depending on what you are testing.
+
+# Run -- you must perform your own tests
+
+Supply four appropriate arguments to the executable. For example,
+
+> ./pe02 -m 0.0 10.0 5
+
+# Run under valgrind 
+
+> valgrind --tool=memcheck --leak-check=yes --log-file=memcheck.log ./pe02 -m 0.0 10.0 5
+
+# Don't forget to *LOOK* at the log-file "memcheck.log"
+
+# Submit the files:
+
+> zip PE02.zip answer02.c pe02.c 
+
+Submit PE02.zip through Blackboard.
+
+# Please read all instructions before asking for help.

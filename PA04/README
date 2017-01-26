@@ -1,0 +1,252 @@
+// ~ Overview ~ //
+
+This assignment is a continuation of PE09 and PE10.
+
+// ~ Learning Goals ~ //
+
+(1) To learn to create and manipulate linked lists and trees.
+(2) To learn to free the memory associated with a linked list and a tree.
+(3) To learn to use bit-wise operations 
+
+// ~ Submitting Your Assignment ~ //
+
+You can submit any number of files.  The only requirment 
+is that you must include a Makefile.  The Makefile should
+allows us to compile your source code and generate
+an executable called pa04.
+
+Your files should reside in a folder called PA04 and you create a 
+zip file as follows.
+
+> zip PA04.zip PA04/*
+
+Of course, you issue the above command in the folder containing 
+PA04, and not in the PA04 folder.
+
+Submit the zip file through Blackboard.  
+
+// ~ Overview ~ //
+
+We assume that you have read the file pe10_pa04.htm and successfully
+completed PE09 and PE10.  At this point, you should be able to  
+construct a Huffman coding tree from a non-empty input file.
+
+This assignment deals with the representation of a Huffman coding tree
+using a series of characters, or more economically using a series of
+bits.  For more details, see the section "Header Information"
+in pe10_pa04.htm.  That section describes how a compressed file can be 
+represented.  Our focus is on how the topology of the Huffman
+coding tree can be represented in the compressed file.  
+
+The following description is adapted from that section:
+
+To represent a Huffman coding tree, we use a post-order traversal, 
+writing each node visited.  Post-order means that the writing of a node
+occurs after visiting the child nodes.  When you encounter a leaf node, you 
+write a 1 followed by the ASCII character of the leaf node. When you 
+encounter a non-leaf node, you write a 0. To indicate the end of the Huffman 
+coding tree, we write another 0.
+
+Consider the string "go go gophers", the header information is 
+"1g1o01s1 01e1h01p1r00000". The post-order traversal of the Huffman 
+coding tree gives us "1g1o01s1 01e1h01p1r0000". Another "0" indicates 
+the end of the topology (see the htm file for the topology).
+
+For the string "streets are stone stars are not", the header information is 
+"1t1a1r001n1o01 01e1s0000".
+
+In these two examples, we use characters 0 and 1 to distinguish between 
+non-leaf and leaf nodes (and 0 to indicate the end of a topology). As there are 
+eight leaf nodes in each of the two examples, there are eight 1's, seven 0's 
+for non-leaf nodes, and another 0 to indicate that we have reached the 
+end of a topology. This approached used a total of 24 bytes.
+
+The header information can be made more economical if we use bits 0 and 1 
+to distinguish between non-leaf and leaf nodes, and also to indicate the end 
+of a topology. In these two examples, there will be a total of 10 bytes 
+(8 bytes for the leaf nodes and 2 bytes for all the bits 0's and 1's).  For 
+example, in the bit-based approach, the first 16 bits (or the first 2 bytes) 
+of the header information for encoding the string "streets are stone stars are 
+not" are 10111010 01011000 (note that the space in the bit stream is 
+introduced for better clarity). The ASCII coding for 't' straddles the two 
+bytes, 7 bits in the first byte and 1 bit in the second byte. The second most 
+significant bit in the second byte is a 1, indicating that the next 8 bits is 
+an ASCII character, of which the the most significant 6 bits of the character 
+'a' is contained in the least significant 6 bits of the second byte.
+
+In the bit-based representation of the Huffman coding tree, the last byte may 
+not contain 8 meaningful bits. In this case, we pad it with 0 bits. Consider 
+the case where the input file uses nine distinct ASCII characters. The number 
+of bits required to represent the Huffman coding tree is 9×8 + 9×2 = 90 bits, 
+which can be represented by 12 bytes. In other words, the last byte should 
+contain only two useful bits. The least significant 6 bits should be padded 
+with 0's.
+
+We expect the pa04 executable to accept 4 arguments:
+
+> ./pa04 input_file output_file_1 output_file_2 output_file_3
+
+The executable should build a Huffman coding tree based on the input file
+(input_file) according to the description in PE10, and produce three output
+files.  The examples folder provide some sample input files: gophers, lorum, 
+stone, woods.
+
+1.  output_file_1:  The file contains as many lines as the number of distinct 
+characters that appear in the input file.  Each distinct character should have 
+a line in this output file with the format of 
+
+character:stream_of_0_and_1
+
+where the stream of 0 and 1 (as character '0' and character '1') being
+the binary pattern corresponding to the Huffman code of the character.
+The order in which you print the characters is based on a tree traversal of 
+the Huffman coding tree that visits the left branch first, followed by
+the right branch.  The corresponding output files for the input files in the 
+examples folder are gophers.huffman, lorum.huffman, stone.huffman, and 
+woods.sorted.
+
+Note that this is the last output file expected of pe10, the executable
+produced in PE10.
+
+2.  output_file_2:  The file contains a representation of the Huffman coding
+tree using a stream of characters obtained using a post-order traversal of
+the Huffman coding tree as described above.  The corresponding output files 
+for the input files in the examples folder are gophers.char, lorum.char, 
+stone.char, and woods.char.
+
+3.  output_file_3:  The file contains a representation of the Huffman coding
+tree using a stream of bits obtained using a post-order traversal of
+the Huffman coding tree as described above.  Of course, the bit stream would 
+have to be represented as characters in the output file.  The last
+character/byte in the output file may contain padding bits of 0 in the less
+significant positions.  The corresponding output files for the input files 
+in the examples folder are gophers.bit, lorum.bit, stone.bit, and woods.bit.
+
+The output files for the example gophers were generated with the 
+following command:
+
+> ./pa04 examples/gophers examples/gophers.huffman examples/gophers.char examples/gophers.bit
+
+// ~ Bit-wise operations ~ //
+
+You would have to use bit-wise operations in one or more functions to
+complete this assignment.  In particular, these are operations that
+would be useful:
+
+>> : shift right operator
+<< : shift left operator
+&  : bit-wise and operator
+|  : bit-wise or operator
+
+Note that when a shift right operator is applied to signed representation
+(char, short, int, or long), the signed bit (bit in the most significant
+position of a 8-bit, 16-bit, 32-bit, or 64-bit number) is preserved.  
+In other words, after shifting, the polarity of the number, i.e., whether
+the number is positive or negative, is preserved.  For an unsigned 
+representation, 0 is shifted into the most significant bit.   
+
+Suppose we are using an int to store a char (i.e., only the least significant
+byte of an int is used to store the useful information), and we are 
+interested in splitting the char into two parts: 3 most significant
+bits and 5 least significant bits, and then exchange the parts such
+that the 3 bits now occupy the least significant positions and the
+5 bits now occupy the most signficant positions:
+
+int old_ch;  // the original char
+int mask = 0xFF;  // a mask of all ones, 0x means hexadecimal, F is 1111
+int MS_mask = (mask >> 5) << 5;  // create a mask of 3 bits of 1 at most
+                                 // significant positions, 0xE0
+int LS_mask = mask >> 3;         // create a mask of 5 bits of 1 at least
+                                 // significant positions, 0x1F
+int LS_3_bits = (MS_mask & old_ch) >> 5;  // get the least significant 3 bits
+                                          // of the new byte
+int MS_5_bits = (LS_mask & old_ch) << 3;  // get the most significant 5 bits
+                                          // of the new byte
+int new_ch = LS_3_bits | MS_5_bits;  // get the new char 
+
+Note that by using an int to store a char, we do not have to worry how
+the polarity may be affected by shifting. 
+
+In this code fragment, we use shifting to create masks (MS_mask and LS_mask)
+of 1 bits from the variable mask.  These masks are used to extract 3 bits and 
+5 bits from old_ch using the bit-wise and operator.  Moreover, the extracted 
+bits are moved to correct positions using the shift operators.  The
+variable new_ch is obtained by combining the extracted (and shifted) bits
+using the bit-wise or operator.
+
+Note that there are many ways to accomplish the above.  We chose a (laborious)
+way that, we think, demonstrates the operators and the use of masks.
+
+// ~ How to check your output ~ //
+
+You can use "diff" command to check your output against those provided
+in the examples folder.
+
+A useful utility is the hexdump command.  The hexdump shows the contents
+of a file in the hexadecimal representation.  For example, "hexdump gophers.bit"gives you
+
+0000000 dbb3 39d7 cb02 5c68 402e               
+000000a
+
+The left most column is the starting byte count (in hexadecimal).
+The remaining columns in a line provide two bytes in a column, with
+the first two symbols representing the more significant byte and
+the next two symbols representing the less significant byte.  
+Therefore, the 0-th byte in the gophers.bit file is 0xb3 or "10110011",
+the 1-st byte in the gophers.bit file is 0xdb or "11011011", and the
+2-nd byte is 0xd7 or "11010111".
+
+Let's take a look at gophers.char, which has the following hexdump output:
+
+0000000 6731 6f31 3130 3173 3020 6531 6831 3130
+0000010 3170 3072 3030 3030                    
+0000018
+
+The 0-th byte is 0x31, which is character '1', the 1-st byte is
+0x67 or "01100111", the 2-nd byte is 0x31, which is character '1', and
+the 3-rd byte is 0x6f or "01101111".  Therefore, in a bit-stream representation
+of the Huffman coding tree, the bit stream for these two leaf nodes should be 
+"1 01100111 1 01101111" (space introduced for clarity).  Grouping 8 bits into
+1 byte, we have three bytes "10110011" "11011011" and "11??????", where the
+?'s in the third byte are from other part of the Huffman coding tree.  
+
+Among these three bytes, the first two bytes match the 0-th and 1-st bytes in 
+gophers.bit, and the most significant two bits of the last byte match the
+most significant two bits of the 2-nd byte in gophers.bit.  The remaining
+6 bits of the 2-nd byte in gophers.bit should match the next few bytes
+in gophers.char.  In particular, the 4-th byte 0x30, i.e., character '0' 
+(bit 0), the 5-th byte 0x31, i.e., character '1' (bit 1), and the most 
+significiant 4 bits from the 6-th byte 0x73 (01110011) from gophers.char
+should form the bit pattern "010111", which should take the place of
+'??????' in the 2-nd byte in gophers.bit.
+
+The less significant 4 bits from 0x73, i.e., 0x3, should form the most 
+significant 4 bits of the 3-rd byte 0x39 in gophers.bit.  Of course, the
+most significant 4 bits of 0x39 is 0x3.  
+
+// ~ How we grade your submission ~ //
+
+You should submit only .c files, .h files, and a Makefile.  We will
+use the Makefile to compile and we expect an executable called "pa04".
+The command "make" should generate "pa04".
+
+If we fail to obtain "pa04", you do not receive any credit for this
+exercise.  It is important that you use the flags "-Wall -Werror -Wshadow"
+in the Makefile for the compilation.  If you fail to use these flags, you
+do not receive any credit for this exercise.
+
+You earn points by producing the correct output files.  If we assign 1 point
+to each case, the first output file will earn you 1/4, the second
+output file 1/4, and the third output file 1/2.
+ 
+The maximum score for this assignment is 20 points.
+
+When pa04 does not have the correct number of arguments supplied to it,
+it should not produce any output files.
+
+When the input file is of size 0 or when the input file cannot be opened, 
+you should not produce any output files.  Output files are expected when the 
+input file is not empty and can be opened.
+
+We will use valgrind to make sure that your program does not have any
+memory problems.  Any form of memory issues will result in 50% penalty.

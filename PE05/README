@@ -1,0 +1,258 @@
+This exercise implements Step Two (below, interleaving) for shuffling
+cards.  For simplicity, each card is represented by a single character
+and the program does not consider the suits (i.e., it does not
+distinguish spade, heart, diamond, or club). Also, the cards are
+distinct (i.e., every card has a unique character).  
+
+Please read this document carefully.
+
+The following shuffling method is used:
+
+*** Step One ***
+
+For a deck of n cards, divide it into two decks (upper deck and lower
+deck). Each deck has at least one card. The orders inside each deck is
+not changed.  For example, if the original deck is 2345678 (each
+number is a card, 2 is at the top and 8 is at the bottom). One
+possible result is
+
+upper: 23
+lower: 45678
+
+Another possible result is
+
+upper: 234
+lower: 5678
+
+Yet another possible result is
+
+upper: 2345
+lower: 678
+
+*** Step Two ***
+
+Interleave the two decks.  Please be careful that the orders in the
+upper deck and the lower deck are unchanged. For example, if the upper
+deck is 234, in the newly shuffled deck, 2 is still above 3 and 3 is
+still above 4.  Similar, if the lower deck is 5678, in the newly
+shuffled deck, 5 is still above 6 and 6 is still above 7.  The order
+of the cards in the two decks may interleave. The following are some
+possible results:
+
+A. 2 is between 5 and 6; 3 is between 6 and 7
+B. 23 are between 5 and 6
+C. 234 are all between 5 and 6
+D. 234 are all above 5 (thus, the new deck is the same as the original
+   deck)
+
+There are other possible results.
+
+*** Combine the Two Steps ***
+
+Suppose the original deck is 234. The are two ways to divide
+it into an upper deck and a lower deck:
+A. upper: 2 lower: 34 or 
+B. upper: 23 lower: 4
+
+Interleaving them can produce these results:
+
+A. upper: 2 lower: 34
+
+234 (2 above 3 and 4), 
+324 (2 between 3 and 4), 
+342 (2 below 3 and 4), 
+
+or 
+
+B. upper: 23 lower: 4
+
+423 (4 above 2 and 3), 
+243 (4 between 2 and 3), 
+234 (4 below 2 and 3)
+
+Please notice that 432 cannot appear.
+
+======================================
+
+In PE05, you need to submit only one file called answer05.c.
+Zip the file as follows and submit PE05.zip through Blackboard:
+
+> zip PE05.zip answer05.c
+
+The file must include one function:
+
+void interleave(CardDeck upperdeck, CardDeck lowerdeck)
+
+12 points
+
+This function takes an upper deck and a lower deck, interleaves the
+cards in the two decks, and prints the results.
+
+You may use malloc in this exercise. If you use malloc, you must
+release memory before the program ends. If valgrind detects memory
+leak or any other memory error, you will lose 50% of the points.
+
+The function generates all possible interleavings of the two decks.
+There is no uncertainty involved in this function. If you find that a
+random number generator is needed, your solution is probably
+incorrect.
+
+You may have additional functions in the file.
+
+A constant called MAX_SIZE is defined in utility.h. You can assume
+that this is the maximum length of the original deck. You MUST use the
+symbol MAX_SIZE and you MUST NOT use the numeric value (13 in this
+case) directly.  When your program is graded, the value of this symbol
+may be different (for example, it may become 15).  If you use 13, the
+program will not work when MAX_SIZE is greater than 13.
+ 
+Repeat: You must use the symbol MAX_SIZE.  You MUST NOT use 13.  Your
+program will not work if you use 13 in the program.  You have been
+warned many times.  If you use 13 in the program, you will lose
+points.
+
+Your program should not make any assumption about the order in the
+original deck. It is possible that 'A' is above '2'; it is also
+possible that 'A' is below '2'. In fact, it is possible that 'A' is
+not in the deck.
+
+=============================
+
+Each CardDeck structure has an array storing the cards.  If you want
+to copy the elements from one array to another array, you cannot use
+"=".  You have to copy the elements one by one.  You can also use
+"bcopy" to copy the elements. bcopy needs three arguments: source,
+destination, and size.  Please see the main function for examples how
+to use bcopy.
+
+=============================
+
+This is the format of the expected output of the program. It is all
+right if your program's output has different orders, as long as the
+program produces these lines.  You will lose points if the output has
+more or fewer lines.
+
+You will lose points if your program prints anything that is not in
+this format. In particular, remove all "debugging messages" before
+submission.
+
+You can find the printDeck function in utility.h and utility.c for
+printing.
+
+[6789A23]
+[678A923]
+[67A8923]
+[6A78923]
+[A678923]
+[678A293]
+[67A8293]
+[6A78293]
+[A678293]
+[67A2893]
+[6A72893]
+[A672893]
+[6A27893]
+[A627893]
+[A267893]
+[678A239]
+[67A8239]
+[6A78239]
+[A678239]
+[67A2839]
+[6A72839]
+[A672839]
+[6A27839]
+[A627839]
+[A267839]
+[67A2389]
+[6A72389]
+[A672389]
+[6A27389]
+[A627389]
+[A267389]
+[6A23789]
+[A623789]
+[A263789]
+[A236789]
+
+=============================
+
+Makefile is included in this exercise for your reference.
+Please study this file. You will need to write Makefile in
+later exercises and assignments.
+
+=============================
+
+How many possible orderings can the new deck have? 
+
+If there are k cards in the original deck, there are k - 1 different
+ways to divide the original deck to two decks:
+
+1. the upper deck has 1 card, the lower deck has k - 1 cards
+2. the upper deck has 2 cards, the lower deck has k - 2 cards
+3. the upper deck has 3 cards, the lower deck has k - 3 cards
+4. the upper deck has 4 cards, the lower deck has k - 4 cards
+...
+k-1. the upper deck has k - 1 cards, the lower deck has 1 card
+
+If the upper deck has n cards and the lower deck has m cards,
+there are 
+
+         (n + m) !
+       ------------
+          n! m!
+
+ways to interleave the two decks, while keeping the orders in the
+original upper deck and the original lower deck.
+
+If the original deck has k cards (i.e., n + m is k), there are totally
+
+   k!          k!                 k!
+-------- + ---------- + ... + ----------
+1! (k-1)!   2! (k-2)!          (k-1)! 1!
+
+results, as the upper deck may have 1, 2, 3, ..., k - 1 cards.
+
+(Remember that both n and m must be one or larger.)
+
+This happens to be parts of the binomial expansion:
+
+       k                           k!       n   k-n
+(x + y)    = sum (n = 0 to k)   --------   x   y
+                                n! (k-n)!
+
+If the first and the last terms are removed, it becomes
+
+   k!          k!                 k!
+-------- + ---------- + ... + ----------
+1! (k-1)!   2! (k-2)!          (k-1)! 1!
+
+                          k
+If x = y = 1, the sum is 2  - 2
+
+Please be aware that if a new deck appears multiple times, it is
+counted multiple time. In the previous example, 234 is counted twice.
+
+For a deck of k distinct cards, there are k! possible orders (i.e.,
+permutations).
+
+k              2         3          4         5         6  
+-----------------------------------------------------------
+k!             2         6         24       120       720
+-----------------------------------------------------------
+ k
+2 - 2          2         6         14        30        62
+
+
+                 k
+As you can see, 2 - 2 is equal to k! when k is 2 or 3 and smaller than
+k! when k is 4 or larger.  Thus, shuffling once cannot generate all
+possible orders, except for only k is 2.
+
+           k
+Actually, 2 - 2 counts the same output multiple times; in the 
+previous example, 234 is counted twice and 432 is not generated.
+
+For simplicity, ECE 264 does not ask you to determine which
+orders are missing.
+

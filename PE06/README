@@ -1,0 +1,55 @@
+This exercise continues PE05.
+
+This program find the possible outcomes of dividing a deck of cards
+into a pair of upper and lower decks.  The division is done such that
+if the upper deck is placed above the lower deck, you get back the
+original deck.  After dividing the cards into the upper and the lower
+decks, they are interleaved into a single deck.  The interleaving
+function has been implemented in PE05.  This is called one round of
+shuffling.
+
+In this exercise, you have to implement a function to find and store
+all possible pairings of non-empty upper and lower decks in two
+arrays.  
+
+The divideDeck function has three arguments:
+   origdeck is the original deck of cards
+   upperdeck and lowerdeck are two arrays with sufficient amounts of 
+   memory   
+   upperdeck[i] and lowerdeck[i] form a pair 
+ 
+The caller of divideDeck (shuffle) should allocate enough memory
+for upperdeck and lowerdeck before calling divideDeck.
+
+You also have to implement a function to perform the shuffling.  In
+this shuffling function, you have to call the division function to get
+all possible pairings.  Before you call the division function, you
+have to allocate sufficient space such that all possible pairings can
+be stored.  For each pair of upper and lower decks, you have to
+perform interleaving.  You have to deallocate or free the space
+storing the pairings before you exit from the function.
+
+You need to submit only one file called answer06.c.  The file must
+include the functions declared in answer06.h.
+
+divideDeck: 4 points
+interleave: 2 points
+shuffle: 6 points
+
+In PE06, you have to submit only one file called answer06.c.
+Zip the file as follows and submit PE06.zip through Blackboard:
+
+> zip PE06.zip answer06.c
+
+You are allowed to have additional functions in the file.
+
+The output for up to five cards are provided for reference. Please
+understand that when your submission is graded, the input deck may not
+include cards 'A', '2', ... Your program must use what is given to the
+function, without assuming what cards are in the original deck.
+
+A. PE05: given an upper deck and a lower deck, interleave the cards
+
+B. PE06: give one deck of cards, generate the possible pairs of upper
+and lower decks, interleave the cards to generate new decks of cards
+

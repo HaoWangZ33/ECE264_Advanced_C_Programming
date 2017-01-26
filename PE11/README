@@ -1,0 +1,384 @@
+// ~ Overview ~ //
+
+This exercise will familiarize you with structures, dynamic memory allocation, 
+and file operations.
+
+// ~ Learning Goals ~ //
+
+(1) To learn to read and write a structure into a file
+(2) To learn to manipulate arrays 
+
+// ~ Submitting Your Assignment ~ //
+
+You must submit two files:
+
+(1) pe11.c
+(2) bmp.c
+
+You use the following command to zip the files:
+ 
+> zip PE11.zip pe11.c bmp.c
+
+Submit the zip file through Blackboard.
+
+// ~ Overview ~ //
+
+The main purpose of this exercise is to familiarize you with
+structures.  It will also give you more practice with file operations
+and memory allocation.  
+
+This exercise (and the next one) will gear you up for PA05, which
+deals with an image format called BMP, which is commonly used in the Windows 
+operating system.  Most web browsers are also able to read and display BMP 
+files.  It is a modification of the exercise that Prof. Yung-Hsiang Lu gave 
+to his class.
+
+In this exercise, you will read in a BMP file and 
+output a new BMP file that is a reflection of the image.
+
+A BMP file has the following format:
+
+/*
+ * BMP files are laid out in the following fashion:
+ *   --------------------------
+ *   |          Header        |   54 bytes
+ *   |-------------------------
+ *   |    Palette (optional)  |   0 bytes (for 24-bit RGB images)
+ *   |-------------------------
+ *   |       Image Data       |   file size - 54 (for 24-bit images)
+ *   --------------------------
+ */
+
+The header has 54 bytes, which are divided into the following fields.
+Note that the #pragma directive ensures that the header structure is
+really 54-byte long by using 1-byte alignment.
+
+/** 
+ * BMP header (54 bytes).
+ */
+
+typedef struct _BMP_Header {
+    uint16_t type;			// Magic identifier
+    uint32_t size;			// File size in bytes
+    uint16_t reserved1;			// Not used
+    uint16_t reserved2;			// Not used
+    uint32_t offset;			// Offset to image data in bytes from beginning of file (54 bytes)
+    uint32_t DIB_header_size;		// DIB Header size in bytes (40 bytes)
+    int32_t  width;			// Width of the image
+    int32_t  height;			// Height of image
+    uint16_t planes;			// Number of color planes
+    uint16_t bits;			// Bits per pixel
+    uint32_t compression;		// Compression type
+    uint32_t imagesize;			// Image size in bytes
+    int32_t  xresolution;		// Pixels per meter
+    int32_t  yresolution;		// Pixels per meter
+    uint32_t ncolours;			// Number of colors  
+    uint32_t importantcolours;		// Important colors 
+} BMP_Header;
+
+Note that the number of bytes each field occupies can be obtained by
+dividing the number 16 or 32 by 8.  For example, the field "type" occupies
+2 bytes.  These fields are all integers.  An "uint" means unsigned,
+and "int" means signed.  For example the fields "width" and "height" are
+signed integers.  However, for simplicity, all the BMP files we have
+will contain only positive integers.  You may assume that in your code.
+Also, we are dealing wih uncompressed BMP format (compression field is 0).  
+
+Because of the packing specified in the bmp.h file, you should be
+able to use fread to read in the first 54 bytes of a BMP file and 
+store 54 bytes in a BMP_Header structure.
+
+Among all these fields in the BMP_Header structure, you have to pay attention 
+to the following fields:
+
+bits:  number of bits per pixel
+width: number of pixel per row
+height: number of rows
+size: file size
+imagesize: the size of image data (file size - 54; 54 is size of header)
+
+We will further explain bits, width, height, and imagesize later.  You should 
+use the following structure to store a BMP file, the header for the first 54 
+bytes of a given BMP file, and data should point to a location that is big 
+enough (of imagesize) to store the image data (color information of each 
+pixel).
+
+typedef struct _BMP_Image {
+    BMP_Header header;
+    unsigned char *data; 
+} BMP_Image;
+
+Effectively, the BMP_Image structure stores the entire BMP file.
+
+Now, let's examine the fields bits, width, height, and imagesize in 
+greater details.  The bits field records the number of bits used to
+represent a pixel.  For this exercise (and the next exercise and assignment),
+we are dealing with BMP files with only 24 bits per pixel or 16 bits per pixel.
+For 24-bit representation, 8 bits (1 byte) for RED, 8 bits for GREEN, and 8 bits
+for BLUE.  For 16-bit representation, each color is represented using 5 bits
+(the most significant bit is not used).  For this exercise, we will use
+only 24-bit BMP files to test your functions.  However, your code should be 
+able to handle 16-bit format as well.  (Note that the header format is
+actually more complicated for 16-bit format.  However, for this exercise
+and the next exercise and assignment, we will use the same header format
+for both 24-bit and 16-bit BMP files for simplicity.  So yes, we are abusing
+the format!)
+
+(Note that RGB means that R occupies a more significant position and
+B occupies a less significant position in both representations.  Also note
+that the most significant bit of the 16-bit representation is not
+used for this set of exercises/assignment.)
+
+The width field gives you the number of pixels per row.  Therefore, the
+total number of bytes required to represent a row of pixel for a 
+24-bit representation is width * 3.  However, the BMP format requires
+each row to be padded at the end such that each row is represented by multiples 
+of 4 bytes of data.  For example, if there is only one pixel in each row,
+we need an additional byte to pad a row.  If there are two pixels per row,
+2 additional bytes.  If there are three pixels per row, 3 additional bytes.
+If there are four pixels per row, we don't have to perform padding.
+We REQUIRE you to assign value 0 to each of the padding byte.
+
+The height field gives you the number of rows.  Row 0 is the bottom of the
+image.  The file is organized such that the bottom row follows the header,
+and the top row is at the end of the file.  Within each row, the left most
+pixel has a lower index.  Therefore, the first byte in data, i.e., data[0],
+belongs to the bottom left pixel.
+
+The imagesize field is height * amount of data per row.  Note that the 
+amount of date per row includes padding at the end of each row.
+
+You can visualize the one-dimensional data as a three-dimensional array,
+which is organized as rows of pixels, with each pixel represented by 3 bytes
+of colors (24-bit representation) or 2 bytes of colors (16-bit representation). 
+However, because of padding, you cannot easily typecast the one-dimensional 
+data as a 3-dimensional array.  Instead, you can first typecast it
+as a two dimensional array, rows of pixels 
+(or rows of [amount of data per row]).  For each row of data, you 
+can typecast it as a two-dimensional array, where the first dimension 
+captures pixels from left to right, the second dimension is the color 
+of each pixel (3 bytes or 2 bytes) (i.e., pixels of [3 bytes] or pixels
+of [2 bytes]).
+
+// ~ functions to be written in bmp.c ~//
+
+(2 points)
+// Read BMP_Image from a given file
+//
+BMP_Image *Read_BMP_Image(FILE *fptr);
+
+This function reads from a file a BMP image, and stores the contents
+of the file in BMP_Image structure.  It returns the address of the 
+BMP_Image structure in which the file contents are stored.  If the
+given file pointer contains an invalid BMP file (wrong format), a NULL
+pointer should be returned.
+
+This are the basic steps:
+
+(1)    Read the 54-byte header into memory
+(2)    Check that the data in the header is valid 
+       (use Is_BMP_Header_Valid to check)
+(3)    If valid, allocate space for the image data and read the image data 
+       (which is the file size minus the 54 bytes of the header), else
+       return NULL.
+
+Do not close the file pointer.  If there are issues allocating memory or
+reading the file, the function should return NULL.
+
+(2 points)
+// Check the validity of the header with the file from which the header is read
+//
+int Is_BMP_Header_Valid(BMP_Header *bmp_hdr, FILE *fptr);
+
+Check whether the bmp_hdr is valid.  The code is partially written.
+You only have to fill in the part to check the fields "size", "imagesize"
+and see whether they match up with the given "bits", "width", and "height" 
+fields (see the description in the Overview).  Return TRUE is the header 
+is valid; FALSE otherwise.  This function will be called in the 
+Read_BMP_Image function.  It will be tested together with the Read_BMP_Image
+function.  If that function does not work properly, this function would be 
+deemed non-functional.
+
+(2 points)
+// Write BMP_Image to a given file
+//
+int Write_BMP_Image(FILE *fptr, BMP_Image *image);
+
+Given a output file pointer, and an image file, write to the output file
+as follows:
+
+1.	Write the 54-byte header into the file
+2.	Write the image data into the file (again, the file size from the header minus 54 bytes)
+
+Do not close the file pointer and do not free the image.
+
+Return TRUE if write is successful; FALSE otherwise.
+
+(0 points)
+// Free memory in a given image
+//
+void Free_BMP_Image(BMP_Image *image);
+
+This free the memory used by image.  No points will be given, but you would
+lose points (50% penalty) if this function does not work properly.
+
+(4 points)
+// Given a BMP_Image, create a new image that is a reflection
+// of the given image
+// It could be a horizontal reflection (with the vertical mirror
+// being placed at the center of the image)
+// It could be a vertical reflection (with the horizontal mirror
+// being placed at the center of the image)
+// It could be a horizontal reflection followed by a vertical
+// reflection (or equivalently, a vertical reflection followed by
+// horizontal reflection).
+// hrefl == 1 implies that a horizontal reflection should take place
+// hrefl == 0 implies that a horizontal reflection should not take place
+// vrefl == 1 implies that a vertical reflection should take place
+// vrefl == 0 implies that a vertical reflection should not take place
+//
+BMP_Image *Reflect_BMP_Image(BMP_Image *image, int hrefl, int vrefl);
+
+You may assume that the given image is always valid.  
+
+hrefl is a flag to indicate whether a horizontal reflection should take place.
+A horizontal reflection is a reflection that assumes a vertical axis in 
+the middle of the image and reflect the left of the given image to be the
+right of the new image and the right of the given image to be the
+left of the new image.  If hrefl is 1, horizontal reflection should take 
+place.  If hrefl is 0, horizontal reflection should not take place.
+
+vrefl is a flag to indicate whether a vertical reflection should take place.
+A vertical reflection is a reflection that assumes a horizontal axis in 
+the middle of the image and reflect the top of the given image to be the
+bottom of the new image and the bottom of the given image to be the
+top of the new image.  If vrefl is 1, vertical reflection should take 
+place.  If vrefl is 0, vertical reflection should not take place.
+
+You may assume that hrefl and vrefl will be supplied with 0 or 1.
+If both hrefl and vrefl are 1, it does not matter which reflection
+is performed first.  If your implementation is correct, you will
+get the same new image regardless of the order in which you perform
+the vertical and horizontal reflections.
+
+If both hrefl and verfl are 0, the new image should be the same
+as the given image except at the positions where you have padding 
+bytes, because the given image may not have 0 as the padding bytes. 
+
+It is critical that you include an appropriate number of padding bytes 
+for each row in the new image, and that you assign 0 to these padding bytes.
+
+The returned value should an address that points to a BMP_Image 
+structure.  The header of the new BMP_Image structure should be valid, such 
+that if the returned address is passed to the Write_BMP_Image function, 
+a valid BMP file will be stored.  The reflected image should be stored 
+as data in the BMP_Image structure.
+
+If there is a problem with memory allocation, return NULL.
+
+You may have to declare and define other functions in bmp.c.  You should not
+start the name of any of these functions with a prefix of 2 underscores "__".
+For grading purpose, each of the functions mentioned above have a counterpart 
+whose name begins with a prefix of 2 underscores "__" declared in bmp.h.
+You do not have to define these functions.
+
+The best way to avoid name conflict is to use static functions.
+
+// ~ Function(s) to be written in pe11.c ~ // 
+
+(2 points) Your main function should expect an arbitrary number 
+of "-v" or "-h" options, followed by an input BMP file, and an output
+BMP file.  The "-v" option indicates a vertical reflection and 
+the "-h" option indicates a horizontal reflection.
+
+For example, if we compile pe11.c and bmp.c into executable pe11
+using the following gcc command, 
+
+> gcc -Wall -Werror -Wshadow -g pe11.c bmp.c -o pe11
+
+If we run the executable as follows:
+
+> ./pe11 -v -h -v -v inputfile.bmp outputfile.bmp
+
+The new image to be written into outputfile.bmp should be obtained
+by performing vertical, horizontal, vertical, and vertical reflections 
+on the original image stored in inputfile.bmp.  The reflections
+are performed in an order as specified by the order in which
+the options "-v" and "-h" appears in the command line.  Of course,
+you have to decide how the Reflect_BMP_Image function should be called 
+in order to perform any sequence of reflections.
+
+If you encounter an invalid option, you should print an error message to stderr
+and return EXIT_FAILURE.  
+
+After you have exhaustively processed all valid options, you should
+be left with 2 arguments in the command line.  Otherwise, you should print
+an error message to stderr and return EXIT_FAILURE.
+
+The second-to-last argument should contain a valid BMP file.  Otherwise,
+you should not produce a new BMP file, and you should return EXIT_FAIURE.
+
+The image from the second-to-last argument should be reflected and the 
+new image should be output to the last argument.  If the call to the
+Reflect_BMP_Image returns a valid image, and the writing to 
+the output file is successful, you should return EXIT_SUCCESS.  Otherwise,
+you should return EXIT_FAILURE.
+
+If for whatever reasons (insufficient arguments, memory allocation 
+problem, file opening issue, format issue), the reflection(s) cannot be 
+performed, the output should not be printed and you should return 
+EXIT_FAILURE.
+
+Whenever you encounter errors and you want to print an error message,
+use stderr for printing, not stdout.  In such a case, always return 
+EXIT_FAILURE.
+
+Return EXIT_SUCCESS only if image reflection and writing are successful.
+
+You are responsible for opening and closing files, allocating and 
+deallocating memory.
+
+// ~ error messages ~ //
+
+If you want to print error messages
+use a statement similar to one of the following statements
+to print accordingly:
+
+fprintf(stderr, "A number expected\n");
+fprintf(stderr, "Invalid option.  -h or -v expected\n");
+fprintf(stderr, "Wrong number of arguments\n");
+fprintf(stderr, "Can't open input file\n");
+fprintf(stderr, "Can't read image from file\n");
+fprintf(stderr, "Can't reflect the image\n");
+fprintf(stderr, "Can't open file for output\n");
+fprintf(stderr, "Error writing to output file\n");
+fprintf(stderr, "Error allocating memory\n");
+fprintf(stderr, "Error reading input file\n");
+fprintf(stderr, "Input file not in expected format\n");
+
+Note that all messages are printed to stderr (not stdout).
+Printing to stdout will result in grading problems.
+
+// ~ How do you test your functions ~ //
+
+The folder "images" contains some images that are of the correct format.
+The folder "results" contains some reflected images.  
+The file is named using options provided:  For example, if we use
+-v -h, the output file should have a name like filename_vh.bmp,
+where filename is the same as the input filename.  
+The folder "corrupted" contains some corrupted images (Most of these images
+can still be displayed properly, but for this exercise, they are considered
+to be corrupted.)
+
+You can use the "diff" function in linux to compare two files.
+
+// ~ WARNINGS ~ //
+
+The following gcc command will be used for compilation:
+
+gcc -Wall -Werror -Wshadow -g pe11.c bmp.c -o pe11
+
+If you code does not compile, you will get zero for this exercise.
+
+We will check for memory problems.  Any memory issue will result in 
+a 50% penalty.

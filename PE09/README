@@ -1,0 +1,298 @@
+// ~ Overview ~ //
+
+This exercise will familiarize you with linked lists, which would
+be useful for a subsequent programming assignment.
+
+// ~ Learning Goals ~ //
+
+(1) To learn to create and manipulate linked lists.
+(2) To learn to free the memory associated with a linked list.
+
+// ~ Submitting Your Assignment ~ //
+
+You must submit one file:
+
+(1) answer09.c
+
+You submit a zip file obtained using the following command:
+ 
+> zip PE09.zip answer09.c
+
+Submit the zip file through Blackboard.
+
+// ~ Overview ~ //
+
+This exercise will give you practice on the construction,
+manipulation, and destruction of linked lists.  It will also prepare you for 
+a subsequent programming assignment.
+
+In this exercise, you will use a linked list to implement a priority queue
+or a stack.
+
+A priority queue is implemented as a linked list where the objects stored
+in the list are actually ordered.  For example, if we want to store a 
+linked list of numbers 5, 10, 4, 3, 1, and the linked list is used to 
+implement a priority queue, the linked list should appear as follows:
+
+1->3->4->5->10->NULL
+
+Here, we assume that "->" is the "pointer."  We also assume that a smaller
+number has a higher priority, and it is therefore listed first.  If
+we now want to get number 7 to join the priority queue, we should have
+the list updated to:
+
+1->3->4->5->7->10->NULL
+
+We call this the enqueue operation.  To remove an item from a priority
+queue, we always remove the item with the highest priority.  This is
+call the dequeue operation.  In this case, a dequeue operation will remove
+1 from the list:
+
+3->4->5->7->10->NULL
+
+When a stack is implemented as a linked list, the object that is pushed
+onto the stack always appears as the first item on the list.  Therefore,
+if we push the list of numbers 5, 10, 4, 3, 1 onto a stack successively, 
+we have the following linked list:
+
+1->3->4->10->5->NULL
+
+If we pop from the stack, we have
+
+3->4->10->5->NULL
+
+If we now push 7 onto the stack, we have
+
+7->3->4->10->5->NULL
+
+In both priority queue and stack, we always remove an item from the
+beginning of the list because that is the most convenient place to
+remove an item from a list.
+
+To help you understand the complexity involved in the removal of
+an item not at the beginning of a list, you will also write a
+function to remove the last item from a list.  For the following list:
+
+7->3->4->10->5->NULL
+
+The removal of the last item in the list gives you
+
+7->3->4->10->NULL
+
+You will also write a function to destroy a linked list and free all
+memory associated with that linked list.
+
+// ~ structure defined ~ //
+
+The following structure will be used for PE09.
+
+typedef struct _lnode {
+   void *ptr;
+   struct _lnode *next;
+} lnode;
+
+ptr stores an address that points to a generic type.  The generic type
+can be a simple data type, a multi-dimensional array, or even a user-defined
+structure.  Essentially, you will be implementing a linked lists of
+addresses stored in ptr.  We shall assume that within a linked list, these 
+addresses in ptr will all be pointing to objects of the same type.
+
+next stores an address that points to an object of type lnode 
+(or struct _lnode), thereby allowing you to maintain a linked list.
+
+// ~ functions to be implemented ~ //
+
+You will implement the following functions in answer09.c.
+
+(3 points)
+lnode *PQ_enqueue(lnode **pq, const void *new_object, 
+                  int (*cmp_fn)(const void *, const void *));
+
+(1 point)
+lnode *PQ_dequeue(lnode **pq);
+
+(2 points)
+lnode *stack_push(lnode **stack, const void *new_object);
+
+(1 point)
+lnode *stack_pop(lnode **stack);
+
+(3 points)
+lnode *lnode_remove_last(lnode **list);
+
+(2 points)
+void lnode_destroy(lnode *list, void (*destroy_fn)(void *));
+
+// ~ details of each function ~ //
+
+lnode *PQ_enqueue(lnode **pq, const void *new_object, 
+                  int (*cmp_fn)(const void *, const void *));
+
+*pq stores the address of the first lnode in the linked list.
+If *pq is NULL, the list is currently empty.  You may assume that
+if *pq is not NULL, the list is valid.
+new_object stores the address of the generic type.
+cmp_fn stores the address of the comparison function for comparing the
+two objects of the same type.  The addresses of the two objects,
+treated as addresses pointing to generic type, are passed into the 
+function.  
+
+If new_object is NULL, the list should remain intact, and you should return 
+NULL.  (Note that this is what we choose to do for this exercise.  In 
+some applications, you may want to allow NULL as new_object.)
+If you could not allocate a new lnode to store new_object in the ptr field,
+the list should remain intact, and you should return NULL.
+Otherwise, the newly allocated lnode should be inserted into the linked list
+such that all lnode's before the new lnode in the list contain objects that 
+are smaller (or equal) to the new lnode (according to cmp_fn), and all lnode's 
+after the new lnode in the list contain objects that are bigger (or equal)
+to the new lnode (according to cmp_fn).  *pq should be updated if the new
+lnode becomes the first item in the list.  The function should return
+the address of the new lnode.
+
+lnode *PQ_dequeue(lnode **pq);
+
+*pq stores the address of the first lnode in the linked list.
+If the list is empty, there is nothing to dequeue.  You should return NULL.
+Otherwise, you should remove the first lnode from the linked list and
+update *pq accordingly.  You should make the removed lnode into a 
+single-node linked list.  In other words, the next field of the removed lnode
+should be set to NULL.  You return the address of the removed lnode.
+Note that the caller function is responsible for freeing the memory associated
+with the removed lnode (including the memory associated with the ptr
+in the removed lnode).  This dequeue operation should not deallocate any
+memory associated with the original linked list.  It simply takes a
+linked list and in a sense, turns it into two linked lists.
+
+lnode *stack_push(lnode **stack, const void *new_object);
+
+*stack stores the address of the first lnode in the linked list.
+new_object stores the address of the generic type.
+
+If new_object is NULL, the list should remain intact, and you should return 
+NULL.
+If you could not allocate a new lnode to store new_object in the ptr field,
+the list should remain intact, and you should return NULL.
+The ptr field of the newly allocated lnode should store new_object.
+The newly allocated lnode should become the first lnode of the list, and 
+*stack should be updated.  The function returns the address of the new lnode.
+
+lnode *stack_pop(lnode **stack);
+
+In a sense, this is the same as PQ_dequeue.
+
+lnode *lnode_remove_last(lnode **list);
+
+*list stores the address of the first lnode in the linked list.
+If the list is empty, there is nothing to remove.  You should return NULL.
+Otherwise, you should remove the last lnode from the linked list and
+if necessary, update *list accordingly.  You should make the removed lnode 
+into a single-node linked list.  You return the address of the removed lnode.
+Again, as in the dequeue and pop operations, this function does not
+deallocate memory associated with the original linked list.  The caller 
+function is responsible for freeing the memory associated with the removed 
+lnode (including the memory associated with the ptr in the removed lnode).
+
+void lnode_destroy(lnode *list, void (*destroy_fn)(void *));
+
+list stores the address of the first lnode in the list.
+destroy_fn stores the address of the function to deallocate the
+memory associated with the address of the generic type stored in
+the ptr field of an lnode.  If the generic type is a simple
+data type, the free function in stdlib.h is an appropriate function
+for destroy_fn.  If the generic type is a user-defined type such
+as the Maze structure in PE08, an appropriate function for
+destroy_fn is Deallocate_maze_space.
+
+The lnode_destroy function should free all memory associated with list.
+For each lnode in the list, it has to use destroy_fn to deallocate
+memory associated with the address of the generic type stored in the
+ptr field and free to deallocate memory allocated for the lnode.
+
+You may want to take a look at the lnode_print function provided in 
+answer09.c as an example on how to call a function whose address has
+been passed in as a parameter.
+
+// ~ some examples of cmp_fn and print_fn ~ //
+
+We have provided examples of destroy_fn functions.
+Here are some examples of cmp_fn (for the PQ_enqueue function) and
+print_fn (for the lnode_print function, which has been defined for you 
+in answer09.c).
+
+If we store the addresses of int (i.e., int *) as the addresses of the generic
+type (void *) in ptr, we can use the following comparison function:
+
+static int int_cmp(const void *p1, const void *p2)
+{
+   return *(const int *)p1 - *(const int *)p2;
+}
+
+Here, the addresses p1 and p2 have been typecast to const int *,
+and dereferenced to obtain const int for comparison (with the difference
+being the result).
+
+If we store the addresses of char (i.e., char *) as the addresses of the
+generic type (void *) in ptr, and each address of char is actually
+the address of the first character of string, we can use the following
+comparison function:
+
+static int string_cmp(const void *p1, const void *p2)
+{
+   return strcmp((const char *)p1, (const char *)p2);
+}
+
+We can use the following print functions for the two generic 
+types for the print_fn parameter in the lnode_print function.
+
+static void int_print(const void *ptr)
+{
+   printf("%d", *(const int *)ptr);
+}
+
+static void string_print(const void *ptr)
+{
+   printf("%s", (const char *)ptr);
+}
+
+These functions will be useful for your test functions
+(to be written in pe09.c, for example).  These comparsion
+functions and print functions should not appear in 
+answer09.c.  
+
+// ~ WARNINGS ~ //
+
+You will have to write a main function so that you can test these
+six functions.  However, you SHOULD write the main function in
+a separate file called pe09.c.  If you include the main function 
+in answer09.c, we will not be able to compile your answer09.c,
+and you will get zero for this exercise.  
+
+The main function that the instructor will write also 
+resides in pe09.c.  The following gcc command will be used for
+compilation:
+
+gcc -Wall -Werror -Wshadow -g pe09.c answer09.c -o pe09
+
+If you code does not compile with the instructor's pe09.c, you will get 
+zero for this exercise.
+
+You should write a Makefile to help you with the compilation. 
+However, you do not have to submit this Makefile.
+
+In the answer09.h file, there are several declared functions, each with
+a name that has a prefix of "__".  We rely on these functions
+to test your individual function.  In order for us to do that:
+
+(1) You have to realize that the answer09.c file does not contain 
+the skeleton of these "__" functions.  Do not define these functions
+in answer09.c.  If you define these functions in answer09.c, we cannot
+test your individual functions.
+
+(2) Do not attempt to call any of these functions in your function.
+If you do that, your program will not compile, and we will not give
+your partial credit for any of the individual functions.
+
+We will use valgrind to make sure that calling your functions will
+not result in memory leak or other memory problems.  Any form of memory issues 
+will result in 50% penalty.

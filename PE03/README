@@ -1,0 +1,312 @@
+In this exercise, you will implement yet another way to 
+perform numerical integration of a function (unknown to you).
+This exercise is related to PE02 and PA01.
+
+// ~ Learning Goals ~ //
+
+You should learn:
+(1) How to perform numerical integration of a function
+(2) How to define a structure needed 
+(3) How to use argc and argv correctly in main.
+
+// ~ Getting Started ~ //
+
+The PE03 folder contains six files:
+(1) answer03.c: this is the file that you hand in. It has the description
+of the new numerical integration method in it, and you must implement the 
+numerical integration method in this file.
+(2) answer03.h: this is a "header" file and it declares the function that 
+you will be writing for this exercise.  You also have to define the structure 
+required.  You have to hand in this file.
+(3) pe03.c: You should use this file to write the main function that would
+properly initialize the structure that would be passed into the numerical 
+integration function.  You have to hand in this file.
+(4) pe03_aux.h: an include file to declare a few unknown functions to be 
+integrated depending on the arguments provided to the executable. 
+(5) pe03_aux.o: provide the object code for the unknown functions to be 
+integrated
+(6) README: this file.
+
+To get started, read this README in its entirety.  Browse through the
+answer03.h and answer03.c files to see what code needs to be written. 
+You will be writing code in the answer03.c file. You will also write code 
+in the pe03.c file to call the function in answer03.c.  answer03.c and
+pe03.c contain the comments that tell you the code that needs to be written 
+in answer03.c and pe03.c, respectively.  You should also read both answer03.c 
+and pe03.c to figure out the structure that needs to be defined in 
+answer03.h.
+
+Follow the discussions below on how to compile and run your code, as
+well as test and submit it.
+
+// ~ Submitting Your Assignment ~ //
+
+You must submit three files:
+(1) answer03.h (4 points): 4 points for defining the structure properly
+(1) answer03.c (4 points): 4 points for the integration function
+(2) pe03.c (4 points): 4 points for the main function 
+
+Use the following command to zip the files:
+
+> zip PE03.zip answer03.h answer03.c pe03.c 
+
+Submit PE03.zip through Blackboard.
+
+// ~ (1) Numerical integration ~ //
+
+Please read up the part about numerical integration in PE02.
+Now we focus on a new integration method: Simpson's rule.
+
+// ~ (1a) Simpson's rule ~ //
+
+Consider the approximation of 
+
+\int_{a,b} f(x) dx
+
+The Simpson's rule approximates the integration by using three points
+that pass through the function:
+(a, f(a)), 
+((a+b)/2, f((a+b)/2)), 
+(b, f(b)).
+
+A quadratic function is formed to pass through the same three points,
+and the integraton of the quadratic function over [a,b] is the 
+approximation of the original integrand.  The following expression is the 
+integration of the quadratic function over [a,b]:
+
+((b-a)/6) * (f(a) + 4*f((a+b)/2) + f(b)).
+
+Therefore, the integration is approximated as 
+
+\int_{a,b} f(x) dx    ~      ((b-a)/6) * (f(a) + 4*f((a+b)/2) + f(b)).
+
+Again, the accuracy may be improved if we divide the range into many
+intervals.  We can apply the Simpson's rule to each of the intervals.  
+The sum of all approximations is an approximation to \int_{a,b} f(x) dx.
+
+// ~ (2) Functions/Structure you have to define ~ //
+
+You are to define a structure in answer03.h, define a function in
+answer03.c, and define the main function in pe03.c.  
+
+In PE02, there is a limitation that the two integration functions
+are defined with a particular function_to_be_integrated.  If you want
+to provide a more general integration function that could be used for
+any functions to be integrated, we have to define the integration function
+to accept any function that accepts a double as an input parameter
+and returns a double as output.
+
+We will try to fix that with this exercise.
+
+// ~ (2a) Defining the structure (4 points) ~ //
+
+In PE02, we pass three parameters to the integration function:
+double lower_limit, double upper_limit, and int n_intervals.
+Moreover, the function_to_be_integrated is fixed within the
+two integration functions.  To relax that such that the integration
+function can be used for any function that accepts a double as 
+an input parameter and returns a double as output, we must also 
+pass the address of such a function to the integration function.
+
+In PE03, we are allowed to pass only a structure to the integration function.
+
+double simpson_numerical_integration(integrand intg_arg);
+
+You task is to define such a structure in answer03.h.
+In this structure, you must store double lower_limit, double upper_limit,
+and int n_intervals.  Moreover, you must store the address of the
+function to be integrated.  The structure is partially defined.  You
+have to complete the definition.
+
+You may ask what is the type of the address of the function to be
+integrated.  Let's understand the meaning of 
+
+int (*func)(double, int);
+
+(Note that this is NOT the type that you should use in your structure.)
+Here, it says that func is the name of the location storing something.
+The * in front of func says that func is going to store an address.
+It is important that the parentheses enclose "*func".  Without the
+parentheses around "*func", it becomes a declaration of a function called
+func and func returns "int *".
+
+The parentheses following (*func) indicate that func is going to 
+store an address pointing to a function, and that function expects
+two input variables, the first being a double and the second being
+an int.  Now, the int before (*func) indicates that the function returns
+an int.
+
+Essentially, the statement declares func to be a variable that
+would store an address pointing to a function that accepts a double and
+an int, and returns an int.
+
+You should ask yourself if you want to declare in the integrand structure
+a field called func_to_be_integrated to store the address of a function that 
+accepts a double as an input parameter and returns a double as output, how 
+you should declare the type of func_to_be_integrated.
+
+The answer to that would allow you to define in answer03.h your structure 
+called integrand, which should contain the fields lower_limit, upper_limit,
+n_intervals, and func_to_be_integrated.  Use these names exactly.  Otherwise,
+we may not be to evaluate your submission properly. 
+
+You need only FOUR fields in your structure, one of which is already defined
+for you.  DO NOT include other fields in your structure.
+
+// ~ (2b) Simpson's rule based numerical integration (4 points) ~//
+
+The function implementing the numerical integration method based on the
+Simpson's rule is declared in answer03.h as
+
+double simpson_numerical_integration(integrand intg_arg);
+
+intg_arg.lower_limit and intg_arg.upper_limit correspond to the limits of the
+range [a,b] of 
+
+\int_{a,b} f(x) dx
+
+where f(x) is intg_arg.func_to_be_integrated(x).
+
+intg_arg.n_intervals corresponds to the number of intervals we divide
+the range [a,b]. You may assume that intg_arg.n_intervals >= 1 for this 
+function.  The caller function has to set intg_arg.n_intervals to be greater 
+or equal to 1.
+
+You are required to implement in answer03.c the numerical integration method 
+based on the Simpson's rule.
+
+The sum of the approximations for all intervals should be returned. 
+ 
+// ~ (2c) The main function (4 points) ~ //
+
+The executable of this exercise expects 4 arguments.  If executable is
+not supplied with exactly 4 arguments, the function returns EXIT_FAILURE.
+
+The first argument specifies which of the three functions you are supposed
+to integrate.  If the first argument is "1", you should
+use the Simpson's rule based method to perform the numerical integration
+of unknown_function_1.  If the first argument is "2", you should
+use the Simpson's rule based method to perform the numerical integration
+of unknown_function_2.  If the first argument is "3", you should
+use the Simpson's rule based method to perform the numerical integration
+of unknown_function_3.
+
+If the first argument does not match "1", "2", or "3", the executable 
+should exit and return EXIT_FAILURE.
+
+The second argument provides the lower limit (double) of the integral. 
+You should use atof (from stdlib.h) to convert the second argument into a double.
+
+The third argument provides the upper limit (double) of the integral. 
+You should use atof to convert the third argument into a double.
+
+The fourth argument provides the number of intervals you should use for the
+approximation.  You should use atoi (from stdlib.h) to convert the
+fourth argument into an int.  If the conversion of the fourth argument results 
+in an int that is less than 1, you should supply 1 (numeric one) as the number
+of intervals for approximation.
+
+You should declare and initialize the fields of a variable intg_arg 
+(of type integrand), i.e., intg_arg.lower_limit, intg_arg.upper_limit, and 
+intg_arg.n_intervals, and intg_arg.func_to_be_integrated, with the lower 
+limit, the upper limit, the number of intervals, and the appropriate unknown 
+function.
+
+The variable intg_arg should be passed to the Simpson's rule based 
+integration function.  
+
+Upon the successful completion of the numerical integration, print
+the approximation using the format "%.10e\n" using the function
+printf. (That is the format to be used, and this is the only printf
+statement in the entire exercise.  If you print other messages, your
+exercises will most likely receive a lower score.)
+
+After printing, the main function returns EXIT_SUCCESS.
+
+// ~ (3) Compilation and testing your program ~ //
+
+You should compile your program with the following command:
+
+> gcc -Wall -Wshadow -Werror -g pe03.c answer03.c pe03_aux.o -o pe03 -lm
+
+Note that -lm is required because the unknown functions contain 
+function calls to math functions declared in math.h.
+
+// ~ (3a) Running your program ~ //
+
+To numerically integrate unknown_function_1, you can use for example,
+
+> ./pe03 1 0.0 10.0 5
+
+As it is, the executable would simply print to the screen 
+
+0.0000000000e+00
+
+// ~ (3b) Testing your program ~ //
+
+See the write-up in the README for PE02.
+Here, assume that you write your own unknown_function_1, unknown_function_2,
+and unknown_function_3 in a file called pe03_my_aux.c.  Now, you compile with 
+the following command:
+
+> gcc -Wall -Wshadow -Werror -g pe03.c answer03.c pe03_my_aux.c -o pe03 -lm
+
+Here, I assume that you are using some functions in declared in math.h.
+Therefore, the -lm option is still being used so that we can link to the math 
+library.
+
+// ~ Warning ~ //
+
+Other than the approximated integral, you should not be printing anything else.
+If the output of your program is not as expected, you get 0 for that test case.
+
+Bottomline: You should not use printf to debug.  
+
+Although you can make changes to answer03.h (since you are submitting
+the file), the only changes you are allowed to make is to define the type
+integrand in answer03.h.  You should not make other changes to answer03.h.
+
+You can declare and define additional functions that you have to use in
+pe03.c and answer03.c. 
+
+In answer03.c and pe03.c, the first few lines of the files include the
+following statements:
+
+// do not change this part, if you do, your code may not compile
+//
+/* test for structure defined by student */
+#ifndef NTEST_STRUCT 
+#include "answer03.h"
+#else 
+#include "answer03_key.h"
+#endif /* NTEST_STRUCT */
+//
+// do not change above this line, if you do, your code may not compile
+
+#ifndef states that if the macro NTEST_STRUCT is not defined,
+the file answer03.h is included.  Otherwise, the file 
+answer03_key.h is included.  (Note that answer03_key.h is 
+withheld from you.  You do not have this file.)  This is to facilitate 
+grading so that if your answer03.h does not work, I can still use
+answer03_key.h (provided by the instructor) to compile and test your code.  
+Do not make changes to these lines.
+
+// ~ Summary ~ //
+
+# Compile 
+> gcc -Wall -Wshadow -Werror -g pe03.c answer03.c pe03_aux.o -o pe03 -lm
+
+# Run -- you must write your own tests
+
+Supply four appropriate arguments to the executable. For example,
+
+> ./pe03 1 0.0 10.0 5
+
+# Submit the files:
+
+> zip PE03.zip answer03.h answer03.c pe03.c 
+
+Submit PE03.zip through Blackboard.
+
+# Please read all instructions before asking for help.
+

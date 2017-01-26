@@ -1,0 +1,278 @@
+In this exercise, you will implement one function:
+(i) A recursive function to convert a long int into a string
+
+// ~ Learning Goals ~ //
+
+The main learning goal is:
+(1) How to write a recursive function
+
+// ~ Getting Started ~ //
+
+The PE04 folder contains six files:
+(1) utility.h: this is the file that you should include in pe04.c and 
+answer04.c.  It contains functions for me to count the number of recursive 
+calls you have made in your recursive function.   That way, I can check 
+whether the number of recursion calls you have made is reasonable.
+(2) utility.o: this is the object code that I have compiled.  It contains the
+functions declared in utility.h.  However, these functions are blackboxes 
+because you have no access to the source code.
+(3) answer04.h:  this is the file that declares the function that would be 
+called in pe04.c.
+(4) answer04.c:  this is the file that you have to turn in.  It contains
+a complete function, which is declared in answer04.h, and you have to 
+complete the recursive function, which is called by the complete function.
+(5) pe04.c:  this is a file to get you started on testing your implementation.
+(6) Makefile: a file that allows you to compile the source codes into 
+executable using the "make" command.
+(6) README: this file.
+
+You will be writing code in the answer04.c file. You may also write code 
+in the pe04.c file for the main function as well as function to test 
+the functions written in the answer04.c file.
+
+// ~ Submitting Your Exercise ~ //
+
+You submit only one file:
+(1) answer04.c (12 points)
+
+You submit through Blackboard the zip file PE04.zip obtained by using the 
+following command:
+ 
+> zip PE04.zip answer04.c
+
+// ~ (1a) Compiling Your Program ~ //
+
+To compile your program, use the following command:
+
+> make
+
+Take a look at the Makefile.  A line starting with '#' means a comment.
+"CC" and "CFLAGS" define the compiler and the flags used by the compiler,
+respectively.  The label "pe04" define the rule to build the executable pe04.
+Immediately after the labels, the object codes that pe04 is dependent on are
+listed:  pe04.o and answer04.o (utility.o is also needed, but this is not 
+supposed to be changed by you, so, it is not listed).  The first build
+rule is the default rule to follow when "make" is called without an 
+argument.  If you type "make clean", the rule for "clean" will be executed,
+which removes all object codes and the executable.  The last
+build rule "%.o" compiles a .c file into a .o file.
+Note that the -c flag is used to generate object code.
+
+// ~ (1b) Running Your Program ~ //
+
+To run your program, you type in, for example, the following command 
+
+> ./pe04 "appropriate argument(s)"
+
+Your main function determines what should be "appropriate argument(s)".
+The appropriate argument(s) could be empty.  The current program will test 
+the conversion using a few numbers.  For each number, it will perform the 
+conversion based on bases from 1 to 37 (of which 1 and 37 are invalid bases).
+
+// ~ (2) Running your program in Valgrind ~ //
+
+I am not asking you to submit a log this time.  However, it is
+always a good practice to check for abnormal behavior of your
+program in Valgrind.
+
+// ~ (3) Long int to string conversion -- Recursion ~ //
+
+This exercise requires you to perform the conversion of a long int 
+to a string for any base greater than 1 but less than 37.  If an invalid
+base is given, errno (which is declared in errno.h) is set appropriately.  
+
+Here is the assumption for bases 2 through 36:
+
+Symbols    Values (interpreted using base 10)
+'0'        0
+'1'        1
+...
+'9'        9
+'a' or 'A' 10
+'b' or 'B' 11
+...
+'z' or 'Z' 35
+
+For base b, 2 <= b <= 36, symbols up to values b-1 are the symbols
+that can be used to represent a number.
+
+In the function long_int_to_string, there is a call to the recursive function
+
+void rec_magnitude_long_int_to_string(long int number, int base,
+                                      char *intstring, int *stringlen);
+
+The assumption that we made here is that we are converting the number,
+and putting the valid symbols of base into intstring, and *stringlen contains
+the number of symbols in intstring.  Note that *stringlen does not include
+the '\0' character.  In other words, before the call to the function,
+*stringlen should contain the current number of symbols in intstring, and
+if the function puts additional symbols into intstring, *stringlen should
+be updated accordingly.
+
+If a negative number is given, a '-' character is put in intstring, and 
+the first call to the recursive function would have *stringlen set to 1.
+Otherwise, the first call to the recursive function would have *stringlen set
+to 0.
+
+At the end of the call to the recursive function, a ret_string is allocated
+with the right amount of memory (*stringlen + 1, i.e., the number of symbols 
++ 1 to account for '\0' character), and the symbols in intstring is copied 
+over, and ret_string is terminated with '\0'.  
+
+Your main duty is to define the function
+
+void rec_magnitude_long_int_to_string(long int number, int base,
+                                      char *intstring, int *stringlen);
+
+If you want to declare the recursive function differently, you
+are allowed to do so.  In that case, you would have to make appropriate changes
+to the function long_int_to_string.  Since you have to submit answer04.c, you 
+are allowed to make changes to the function long_int_to_string.  However, 
+the declaration of long_int_to_string is fixed as the declaration is in 
+answer04.h, which you are not submitting.
+
+// ~ (3a) rec_magnitude_long_int_to_string ~//
+
+This function recursively converts the magnitude of a given number into
+a string, depending on the given base.   The given number can be negative.
+However, this recursive function is not responsible for putting the negative 
+sign into intstring.  It is only responsible for the conversion of the 
+magnitude of the given number.
+
+How should you perform the conversion?  If I give you a number
+1274, and you are supposed it to string for base 10,
+what would you get if you perform 1274%10?  You get 4.  Of course,
+you have to convert the number 4 to character '4'.  
+How about 1274/10 (integer division)?  You get 127.  Now, can you
+apply the same conversion rule to 127 recursively to get the rest of the 
+string.  The ordering of the symbols in intstring is important if you want to 
+get the conversion right.
+
+Let's try a different base.  Assume base 36.  1274%36 gives you a value of
+14.  The symbol is 'e' or 'E'.  1274/36 gives you 35.  Now, we recursively
+convert 35.  35%36 gives you a value of 35.  The symbol is 'z' or 'Z'.  There 
+are 4 possible answers: "ze", "zE", "Ze", or "ZE" (with an implicit '\0' 
+at the end of each string).  They are all correct.
+
+A string (or the address of the first char in the string) returned by long_int_to_string 
+should contain only valid symbols for the particular base followed by
+a '\0'.
+
+Again, you have the flexibility to redefine the long_int_to_string function
+to match the order in which you store symbols into intstring in the
+recursive function.  In the definition given to you currently, I assume that
+the symbols are put in intstring in the correct order.
+
+// ~ (3b) How to use functions in utility.h ~ //
+
+The functions in utility.h allows us to know how many recursion calls
+have been made.  This is how you should use the utility functions.
+Before you call the long_int_to_string function, you have to call
+
+Initiailize_counter();
+
+so that we can initialize the appropriate counters (see pe04.c). 
+
+At the beginning of the recursive function, you have to call 
+
+Increment_counter(&number);
+
+where number is the first parameter of the recursive function
+(see answer04.c). 
+
+Before you return from the recursive function, you have to call
+
+Decrement_counter();
+
+Note that Decrement_counter has to be call after all recursive calls within
+the recursive function have been made (see answer04.c).
+
+After the long_int_to_string function is successfully executed, you
+can call 
+
+Counter_statistics();
+
+to get the statistics, which should include the total number of
+recursive calls, the deepest number of recursive calls, and the frame size.
+Note the frame size is 0 if the deepest number of recursive calls is
+0 or 1 (see pe04.c). 
+
+Here is an example using the Fibonacci function.
+Assume that the main function will call Fibonacci, the main function
+will call Initialize_counter() before the call, and Counter_statistics()
+after the call.
+
+A typical Fibonacci function looks like this:
+
+int Fibonacci(int n) {
+   if (n == 0) { return 0; }
+   if (n == 1) { return 1; }
+   return Fibonacci(n-1) + Fibonacci(n-2);
+}
+
+We would have to modify Fibonacci to use the two functions
+Increment_counter and Decrement_counter as follows:
+
+int Fibonacci(int n) {
+  Increment_counter(&n);
+  if (n == 0) { Decrement_counter(); return 0; }
+  if (n == 1) { Decrement_counter(); return 1; }
+  int temp1 = Fibonacci(n-1);
+  int temp2 = Fibonacci(n-2);
+  Decrement_counter();
+  return temp1 + temp2; 
+}
+
+Increment_counter has to be called at the beginning of function.
+Decrement_counter has to be called before we exit from the function
+and after all recursive calls within the function.  
+
+Note that the functions in utility.h are written with the
+assumption that the recursion occurs within the same function.
+In other words, function A calls function A directly.  In many
+real examples, the recursion can be more complicated, with 
+function A calling function B, which in turns calls function A.
+I expect you to write a recursive function which calls itself
+(the simple case).
+
+// ~ Testing your function ~ //
+
+A partial test function has been written for you.  In this function,
+we use strtol to perform the conversion of the string returned by
+long_int_to_string into a long.  If the conversion gives you the 
+same number as the input to long_int_to_string, it is likely that
+your implementation is correct.  However, the string may also 
+contain invalid symbols, which cause the conversion of strtol to stop.
+You should explore the function strtol more thoroughly so
+that you can write a more complete test function.  A few things to 
+keep in mind:
+
+(1) errno should be reset to 0 before calling strtol because strtol
+will set errno if (i) the base for conversion is invalid, or (ii)
+the conversion results in a long int that is out of range.  In the
+former, EINVAL will be assigned to errno.  In the latter, ERANGE
+will be assigned to errno.  None of these should occur.
+
+(2) The second argument of strtol can take in the address of a variable
+that is of type char * (that's why the second argument is of type char **).
+You have to declare an variable that is of type char * and pass its
+address to strtol.  Since the address of this variable is passed into
+strtol, the contents of this variable can be updated by strtol, and 
+it stores the location at which the conversion performed by strtol stops.
+If the input string contains all the valid symbol, the conversion 
+should stop only it encounter the '\0' character in the input string.
+Therefore, this variable should contain an address that points to 
+a location that contains '\0'.
+
+You would have to think about the appropriate number of recursive calls
+you have to make to perform the conversion.
+
+// ~ Grading ~ //
+
+The 12 points are distributed as follows:
+(1) correctness of your conversion: 6 points.
+(2) correctness of the number of recursions used: 6 points.
+We can tolerate a +/- 1 difference in the number of recursions used.
+
+You should not have any printing performed in answer04.c.
+Memory error will result in 50% penalty.
